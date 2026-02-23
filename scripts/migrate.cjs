@@ -1,5 +1,7 @@
-const { db } = require('@vercel/postgres');
-require('dotenv').config();
+import { sql } from '@vercel/postgres';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 async function migrate() {
   const client = await db.connect();
