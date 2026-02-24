@@ -555,15 +555,35 @@ export default function Agenda({
     };
 
     if (editingId) {
+      // Update existing agendamento
+      // TODO: Implement API update
       setAgendamentos(prev => prev.map(a => a.id === editingId ? { ...a, ...finalData } as Agendamento : a));
+      setShowModal(false);
     } else {
-      const newAgendamento: Agendamento = {
-        id: Date.now(),
-        ...finalData
-      } as Agendamento;
-      setAgendamentos(prev => [...prev, newAgendamento]);
+      // Create new agendamento
+      (async () => {
+        try {
+          const response = await fetch('/api/sync/agendamentos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(finalData),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            alert(`Erro ao salvar agendamento: ${errorData.error || response.statusText}`);
+            return;
+          }
+
+          const newAgendamento = await response.json();
+          setAgendamentos(prev => [...prev, newAgendamento]);
+          setShowModal(false);
+        } catch (error) {
+          console.error('Erro ao salvar agendamento:', error);
+          alert('Erro de conexão ao salvar agendamento.');
+        }
+      })();
     }
-    setShowModal(false);
   };
 
   // --- CHECKOUT HANDLERS ---

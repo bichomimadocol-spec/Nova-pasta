@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
 
@@ -517,12 +517,39 @@ export interface PaymentAccount {
 }
 
 import { FinanceiroService } from './services/financeiro';
+import { clientesService } from './services/clientesService';
+import { vendasService } from './services/vendasService';
 
 export default function App() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [vendas, setVendas] = useState<Venda[]>([]);
+
+  // Carregar dados do banco ao iniciar
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [clientesData, vendasData] = await Promise.all([
+          clientesService.listar(),
+          vendasService.listar()
+        ]);
+        
+        if (clientesData && clientesData.length > 0) {
+          setClientes(clientesData);
+        }
+        
+        if (vendasData && vendasData.length > 0) {
+          setVendas(vendasData);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do banco:', error);
+      }
+    };
+    
+    loadData();
+  }, []);
+
   const [caixaAberto, setCaixaAberto] = useState<boolean>(false);
   const [movimentosCaixa, setMovimentosCaixa] = useState<MovimentoCaixa[]>([]);
   

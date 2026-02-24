@@ -147,110 +147,103 @@ export default function Clientes({ clientes, setClientes, pets, setPets }: Clien
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // Validation (deixa tudo igual)
-  const newErrors: Record<string, string> = {};
-  let isValid = true;
+    // Validation
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
 
-  if (formData.tipoPessoa === 'JURIDICA') {
-    if (!formData.cnpj) {
-      newErrors.cnpj = 'CNPJ é obrigatório.';
-      isValid = false;
-    } else if (formData.cnpj.replace(/\D/g, '').length !== 14) {
-      newErrors.cnpj = 'CNPJ inválido.';
-      isValid = false;
-    }
-    if (!formData.razaoSocial || formData.razaoSocial.length < 3) {
-      newErrors.razaoSocial = 'Razão Social é obrigatória (min 3 caracteres).';
-      isValid = false;
-    }
-    if (!formData.responsavelNome || formData.responsavelNome.length < 3) {
-      newErrors.responsavelNome = 'Nome do responsável é obrigatório (min 3 caracteres).';
-      isValid = false;
-    }
-    if (!formData.responsavelCpf || formData.responsavelCpf.replace(/\D/g, '').length !== 11) {
-      newErrors.responsavelCpf = 'CPF do responsável inválido.';
-      isValid = false;
-    }
-  } else {
-    if (!formData.nome || formData.nome.length < 3) {
-      newErrors.nome = 'Nome é obrigatório (min 3 caracteres).';
-      isValid = false;
-    }
-    if (formData.cpf) {
-      const cleanCpf = formData.cpf.replace(/\D/g, '');
-      if (cleanCpf.length !== 11) {
-        newErrors.cpf = 'CPF inválido.';
+    if (formData.tipoPessoa === 'JURIDICA') {
+      if (!formData.cnpj) {
+        newErrors.cnpj = 'CNPJ é obrigatório.';
+        isValid = false;
+      } else if (formData.cnpj.replace(/\D/g, '').length !== 14) {
+        newErrors.cnpj = 'CNPJ inválido.';
         isValid = false;
       }
-    }
-  }
-
-  if (!formData.telefone && !formData.responsavelTelefone) {
-    const field = formData.tipoPessoa === 'JURIDICA' ? 'responsavelTelefone' : 'telefone';
-    newErrors[field] = 'Informe um telefone para contato.';
-    isValid = false;
-  }
-
-  const emailToCheck = formData.tipoPessoa === 'JURIDICA' ? formData.responsavelEmail : formData.email;
-  if (emailToCheck) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailToCheck)) {
-      const field = formData.tipoPessoa === 'JURIDICA' ? 'responsavelEmail' : 'email';
-      newErrors[field] = 'E-mail inválido.';
-      isValid = false;
-    }
-  }
-
-  setErrors(newErrors);
-  if (!isValid) return;
-
-  // 👇 AGORA CHAMA A API (novo código)
-  try {
-    if (editingId !== null) {
-      // Update existing client via API
-      const response = await fetch(`/api/clientes?id=${editingId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const clienteAtualizado = await response.json();
-        setClientes((prev) =>
-          prev.map((cliente) =>
-            cliente.id === editingId ? clienteAtualizado : cliente
-          )
-        );
-      } else {
-        alert('Erro ao atualizar cliente');
-        return;
+      if (!formData.razaoSocial || formData.razaoSocial.length < 3) {
+        newErrors.razaoSocial = 'Razão Social é obrigatória (min 3 caracteres).';
+        isValid = false;
+      }
+      if (!formData.responsavelNome || formData.responsavelNome.length < 3) {
+        newErrors.responsavelNome = 'Nome do responsável é obrigatório (min 3 caracteres).';
+        isValid = false;
+      }
+      if (!formData.responsavelCpf || formData.responsavelCpf.replace(/\D/g, '').length !== 11) {
+        newErrors.responsavelCpf = 'CPF do responsável inválido.';
+        isValid = false;
       }
     } else {
-      // Create new client via API
-      const API_URL = process.env.REACT_APP_API_URL || 'https://nova-pasta-8ev5brb15-jarindrans-projects.vercel.app';
-const response = await fetch(`${API_URL}/api/clientes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const novoCliente = await response.json();
-        setClientes((prev) => [...prev, novoCliente]);
-      } else {
-        alert('Erro ao salvar cliente');
-        return;
+      if (!formData.nome || formData.nome.length < 3) {
+        newErrors.nome = 'Nome é obrigatório (min 3 caracteres).';
+        isValid = false;
+      }
+      if (formData.cpf) {
+        const cleanCpf = formData.cpf.replace(/\D/g, '');
+        if (cleanCpf.length !== 11) {
+             newErrors.cpf = 'CPF inválido.';
+             isValid = false;
+        }
       }
     }
 
-    handleCancel();
-  } catch (error) {
-    console.error('Erro ao salvar cliente:', error);
-    alert('Erro ao salvar cliente. Tente novamente.');
-  }
-};
+    if (!formData.telefone && !formData.responsavelTelefone) {
+        const field = formData.tipoPessoa === 'JURIDICA' ? 'responsavelTelefone' : 'telefone';
+        newErrors[field] = 'Informe um telefone para contato.';
+        isValid = false;
+    }
+
+    const emailToCheck = formData.tipoPessoa === 'JURIDICA' ? formData.responsavelEmail : formData.email;
+    if (emailToCheck) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailToCheck)) {
+            const field = formData.tipoPessoa === 'JURIDICA' ? 'responsavelEmail' : 'email';
+            newErrors[field] = 'E-mail inválido.';
+            isValid = false;
+        }
+    }
+
+    setErrors(newErrors);
+    if (!isValid) return;
+
+    if (editingId !== null) {
+      // Update existing client
+      // TODO: Implement API update
+      setClientes((prev) =>
+        prev.map((cliente) =>
+          cliente.id === editingId
+            ? { ...cliente, ...formData } as Cliente
+            : cliente
+        )
+      );
+      handleCancel();
+    } else {
+      // Create new client
+      try {
+        const response = await fetch('/api/sync/clientes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...formData,
+            dataCadastro: new Date().toLocaleDateString(),
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          alert(`Erro ao salvar cliente: ${errorData.error || response.statusText}`);
+          return;
+        }
+
+        const newCliente = await response.json();
+        setClientes((prev) => [newCliente, ...prev]); // Add to top of list
+        handleCancel();
+      } catch (error) {
+        console.error('Erro ao salvar cliente:', error);
+        alert('Erro de conexão ao salvar cliente.');
+      }
+    }
+  };
 
   const handleEdit = (cliente: Cliente) => {
     setFormData(cliente);

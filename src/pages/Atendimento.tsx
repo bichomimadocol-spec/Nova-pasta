@@ -436,26 +436,45 @@ export default function Atendimento({
     }
 
     // 6. Finalize
-    setProdutos(updatedProdutos);
-    setVendas(prev => [...prev, novaVenda]);
+    try {
+      const response = await fetch('/api/sync/vendas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(novaVenda),
+      });
 
-    if (onIntegrarFinanceiro) {
-      onIntegrarFinanceiro(novaVenda, checkoutForm.operadoraId);
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(`Erro ao salvar venda: ${errorData.error || response.statusText}`);
+        return;
+      }
+
+      const vendaSalva = await response.json();
+      setProdutos(updatedProdutos);
+      setVendas(prev => [...prev, vendaSalva]);
+
+      if (onIntegrarFinanceiro) {
+        onIntegrarFinanceiro(vendaSalva, checkoutForm.operadoraId);
+      }
+
+      // Reset form
+      setSelectedClienteId('');
+      setSelectedPetId('');
+      setCarrinho([]);
+      setDesconto(0);
+      setCheckoutForm({
+          formaPagamento: 'DINHEIRO',
+          operadoraId: 0,
+          valorRecebido: 0,
+          observacao: ''
+      });
+      setParcelasSimuladas([]);
+      setShowCheckoutModal(false);
+
+    } catch (error) {
+      console.error('Erro ao salvar venda:', error);
+      alert('Erro de conexão ao salvar venda.');
     }
-
-    // Reset form
-    setSelectedClienteId('');
-    setSelectedPetId('');
-    setCarrinho([]);
-    setDesconto(0);
-    setCheckoutForm({
-        formaPagamento: 'DINHEIRO',
-        operadoraId: 0,
-        valorRecebido: 0,
-        observacao: ''
-    });
-    setParcelasSimuladas([]);
-    setShowCheckoutModal(false);
   };
 
   const getClienteNome = (id: number) => {

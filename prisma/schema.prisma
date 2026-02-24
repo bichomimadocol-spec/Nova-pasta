@@ -1,0 +1,683 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+// 1. Tabela de Empresas (Multi-tenancy)
+model Empresa {
+  id              Int       @id @default(autoincrement())
+  razaoSocial     String    @map("razao_social")
+  nomeFantasia    String?   @map("nome_fantasia")
+  cnpj            String?   @unique
+  telefone        String?
+  email           String?
+  endereco        String?
+  logoUrl         String?   @map("logo_url")
+  ativo           Boolean   @default(true)
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+  atualizadoEm    DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  // Relacionamentos
+  perfis          Perfil[]
+  usuarios        Usuario[]
+  profissionais   Profissional[]
+  clientes        Cliente[]
+  pets            Pet[]
+  produtos        Produto[]
+  fornecedores    Fornecedor[]
+  movimentacoes   MovimentacaoEstoque[]
+  entradas        EntradaMercadoria[]
+  contas          ContaBancaria[]
+  categorias      CategoriaFinanceira[]
+  historicos      HistoricoPadrao[]
+  titulos         TituloFinanceiro[]
+  movimentos      MovimentoConta[]
+  operadoras      OperadoraCartao[]
+  recebiveis      RecebivelCartao[]
+  contratos       Contrato[]
+  agendamentos    Agendamento[]
+  vendas          Venda[]
+  caixas          CaixaDiario[]
+
+  @@map("empresas")
+}
+
+// 2. Tabela de Perfis de Acesso
+model Perfil {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int       @map("empresa_id")
+  nome            String
+  ativo           Boolean   @default(true)
+  permissoes      Json      @default("[]") // Array de PermissaoModulo
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+  atualizadoEm    DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+  usuarios        Usuario[]
+
+  @@map("perfis")
+}
+
+// 3. Tabela de Usuários
+model Usuario {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int       @map("empresa_id")
+  perfilId        Int?      @map("perfil_id")
+  nome            String
+  email           String    @unique
+  senhaHash       String    @map("senha_hash")
+  ativo           Boolean   @default(true)
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+  atualizadoEm    DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+  perfil          Perfil?   @relation(fields: [perfilId], references: [id])
+  profissional    Profissional?
+  movimentacoes   MovimentacaoEstoque[]
+  baixas          BaixaTitulo[]
+  vendas          Venda[]
+
+  @@map("usuarios")
+}
+
+// 4. Tabela de Profissionais
+model Profissional {
+  id                  Int       @id @default(autoincrement())
+  empresaId           Int       @map("empresa_id")
+  usuarioId           Int?      @unique @map("usuario_id")
+  nome                String
+  apelido             String?
+  telefone            String?
+  funcao              String?
+  comissaoPercentual  Decimal?  @default(0) @map("comissao_percentual") @db.Decimal(5, 2)
+  ativo               Boolean   @default(true)
+  criadoEm            DateTime  @default(now()) @map("criado_em")
+  atualizadoEm        DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  empresa             Empresa   @relation(fields: [empresaId], references: [id])
+  usuario             Usuario?  @relation(fields: [usuarioId], references: [id])
+  agendamentos        Agendamento[]
+
+  @@map("profissionais")
+}
+
+// 5. Tabela de Clientes
+model Cliente {
+  id                  Int       @id @default(autoincrement())
+  empresaId           Int       @map("empresa_id")
+  nome                String
+  telefone            String?
+  email               String?
+  cpf                 String?
+  rg                  String?
+  dataCadastro        DateTime  @default(now()) @map("data_cadastro")
+  tipoPessoa          String?   @default("FISICA") @map("tipo_pessoa")
+  contribuinteIcms    Boolean?  @default(false) @map("contribuinte_icms")
+  consumidorFinal     Boolean?  @default(true) @map("consumidor_final")
+  dataNascimento      DateTime? @map("data_nascimento") @db.Date
+  sexo                String?
+  cep                 String?
+  endereco            String?
+  numero              String?
+  complemento         String?
+  bairro              String?
+  cidade              String?
+  uf                  String?
+  proximidade         String?
+  tags                String?
+  comoNosConheceu     String?   @map("como_nos_conheceu")
+  limiteCredito       Decimal?  @default(0) @map("limite_credito") @db.Decimal(10, 2)
+  perfilDesconto      String?   @map("perfil_desconto")
+  grupoCliente        String?   @map("grupo_cliente")
+  observacao          String?
+  // PJ Fields
+  cnpj                String?
+  razaoSocial         String?   @map("razao_social")
+  nomeFantasia        String?   @map("nome_fantasia")
+  inscricaoEstadual   String?   @map("inscricao_estadual")
+  ramoAtividade       String?   @map("ramo_atividade")
+  responsavelNome     String?   @map("responsavel_nome")
+  responsavelCpf      String?   @map("responsavel_cpf")
+  responsavelEmail    String?   @map("responsavel_email")
+  responsavelTelefone String?   @map("responsavel_telefone")
+  ativo               Boolean   @default(true)
+  criadoEm            DateTime  @default(now()) @map("criado_em")
+  atualizadoEm        DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  empresa             Empresa   @relation(fields: [empresaId], references: [id])
+  pets                Pet[]
+  recebiveis          RecebivelCartao[]
+  contratos           Contrato[]
+  agendamentos        Agendamento[]
+  vendas              Venda[]
+  parcelasCrediario   ParcelaCrediario[]
+
+  @@index([empresaId])
+  @@index([nome])
+  @@index([cpf])
+  @@map("clientes")
+}
+
+// 6. Tabela de Pets
+model Pet {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int       @map("empresa_id")
+  clienteId       Int       @map("cliente_id")
+  nome            String
+  especie         String?
+  raca            String?
+  porte           String?
+  pelagem         String?
+  genero          String?
+  dataNascimento  DateTime? @map("data_nascimento") @db.Date
+  idade           String?
+  chip            String?
+  pedigreeRg      String?   @map("pedigree_rg")
+  alimentacao     String?
+  tags            String?
+  alergias        String?
+  observacao      String?
+  dataCadastro    DateTime  @default(now()) @map("data_cadastro")
+  ativo           Boolean   @default(true)
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+  atualizadoEm    DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+  cliente         Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  contratos       Contrato[]
+  agendamentos    Agendamento[]
+  vendas          Venda[]
+
+  @@index([clienteId])
+  @@map("pets")
+}
+
+// 7. Tabela de Produtos e Serviços
+model Produto {
+  id                      Int       @id @default(autoincrement())
+  empresaId               Int       @map("empresa_id")
+  tipo                    String    // Produto, Serviço, Plano
+  nome                    String
+  descricao               String?
+  categoria               String?
+  preco                   Decimal   @default(0) @db.Decimal(10, 2)
+  custo                   Decimal?  @default(0) @db.Decimal(10, 2)
+  ativo                   Boolean   @default(true)
+  controlaEstoque         Boolean?  @default(false) @map("controla_estoque")
+  estoqueAtual            Decimal?  @default(0) @map("estoque_atual") @db.Decimal(10, 3)
+  estoqueMinimo           Decimal?  @default(0) @map("estoque_minimo") @db.Decimal(10, 3)
+  estoqueIdeal            Decimal?  @map("estoque_ideal") @db.Decimal(10, 3)
+  permiteEstoqueNegativo  Boolean?  @default(false) @map("permite_estoque_negativo")
+  codigoBarras            String?   @map("codigo_barras")
+  sku                     String?
+  unidade                 String?
+  ncm                     String?
+  cest                    String?
+  marca                   String?
+  localizacao             String?
+  fornecedores            String?
+  validade                DateTime? @db.Date
+  observacao              String?
+  // Service fields
+  duracao                 String?
+  horas                   String?
+  minutos                 String?
+  situacaoTributaria      String?   @map("situacao_tributaria")
+  impostoIss              Decimal?  @map("imposto_iss") @db.Decimal(5, 2)
+  // Plan fields
+  tipoPlano               String?   @map("tipo_plano") // MENSALIDADE, CONSUMO
+  textoContrato           String?   @map("texto_contrato")
+  itensInclusos           Json?     @map("itens_inclusos") // Array de strings ou IDs
+  dataCadastro            DateTime  @default(now()) @map("data_cadastro")
+  criadoEm                DateTime  @default(now()) @map("criado_em")
+  atualizadoEm            DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  empresa                 Empresa   @relation(fields: [empresaId], references: [id])
+  movimentacoes           MovimentacaoEstoque[]
+  itensEntrada            ItemEntrada[]
+  contratos               Contrato[] // Planos usados em contratos
+  agendamentos            Agendamento[] // Serviços agendados (opcional)
+  itensVenda              ItemVenda[]
+
+  @@index([empresaId])
+  @@map("produtos")
+}
+
+// 8. Tabela de Fornecedores
+model Fornecedor {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int       @map("empresa_id")
+  nome            String
+  cnpj            String?
+  telefone        String?
+  email           String?
+  contato         String?
+  observacao      String?
+  ativo           Boolean   @default(true)
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+  atualizadoEm    DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+  entradas        EntradaMercadoria[]
+
+  @@map("fornecedores")
+}
+
+// 9. Movimentação de Estoque
+model MovimentacaoEstoque {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int       @map("empresa_id")
+  produtoId       Int       @map("produto_id")
+  tipo            String    // ENTRADA, SAIDA, AJUSTE, INVENTARIO
+  quantidade      Decimal   @db.Decimal(10, 3)
+  motivo          String?
+  observacao      String?
+  referencia      String?
+  dataHora        DateTime  @default(now()) @map("data_hora")
+  usuarioId       Int?      @map("usuario_id")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+  produto         Produto   @relation(fields: [produtoId], references: [id])
+  usuario         Usuario?  @relation(fields: [usuarioId], references: [id])
+
+  @@map("movimentacoes_estoque")
+}
+
+// 10. Entradas de Mercadoria
+model EntradaMercadoria {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int       @map("empresa_id")
+  fornecedorId    Int?      @map("fornecedor_id")
+  data            DateTime  @default(now())
+  numeroDocumento String?   @map("numero_documento")
+  observacao      String?
+  valorTotal      Decimal?  @default(0) @map("valor_total") @db.Decimal(10, 2)
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+  fornecedor      Fornecedor? @relation(fields: [fornecedorId], references: [id])
+  itens           ItemEntrada[]
+
+  @@map("entradas_mercadoria")
+}
+
+model ItemEntrada {
+  id              Int       @id @default(autoincrement())
+  entradaId       Int       @map("entrada_id")
+  produtoId       Int?      @map("produto_id")
+  quantidade      Decimal   @db.Decimal(10, 3)
+  custoUnitario   Decimal   @map("custo_unitario") @db.Decimal(10, 2)
+  valorTotal      Decimal   @map("valor_total") @db.Decimal(10, 2)
+
+  entrada         EntradaMercadoria @relation(fields: [entradaId], references: [id], onDelete: Cascade)
+  produto         Produto?  @relation(fields: [produtoId], references: [id])
+
+  @@map("itens_entrada")
+}
+
+// 11. Financeiro - Bancos e Contas
+model Banco {
+  id              Int       @id @default(autoincrement())
+  codigo          String?
+  nome            String?
+  ativo           Boolean   @default(true)
+  contas          ContaBancaria[]
+
+  @@map("bancos")
+}
+
+model ContaBancaria {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int       @map("empresa_id")
+  bancoId         Int?      @map("banco_id")
+  descricao       String
+  agencia         String?
+  conta           String?
+  tipo            String    // CAIXA, CORRENTE, POUPANCA
+  saldoInicial    Decimal?  @default(0) @map("saldo_inicial") @db.Decimal(10, 2)
+  saldoAtual      Decimal?  @default(0) @map("saldo_atual") @db.Decimal(10, 2)
+  ativo           Boolean   @default(true)
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+  atualizadoEm    DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+  banco           Banco?    @relation(fields: [bancoId], references: [id])
+  baixas          BaixaTitulo[]
+  movimentos      MovimentoConta[]
+
+  @@map("contas_bancarias")
+}
+
+// 12. Financeiro - Categorias e Históricos
+model CategoriaFinanceira {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int       @map("empresa_id")
+  nome            String
+  tipo            String    // RECEITA, DESPESA, TRANSFERENCIA, AJUSTE
+  ativo           Boolean   @default(true)
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+  titulos         TituloFinanceiro[]
+  movimentos      MovimentoConta[]
+
+  @@map("categorias_financeiras")
+}
+
+model HistoricoPadrao {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int       @map("empresa_id")
+  descricao       String
+  tipo            String    // RECEBIMENTO, PAGAMENTO, AJUSTE, TRANSFERENCIA
+  ativo           Boolean   @default(true)
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+
+  @@map("historicos_padrao")
+}
+
+// 13. Financeiro - Títulos
+model TituloFinanceiro {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int       @map("empresa_id")
+  tipo            String    // RECEBER, PAGAR
+  pessoaTipo      String?   @map("pessoa_tipo") // CLIENTE, FORNECEDOR, OUTROS
+  pessoaId        Int?      @map("pessoa_id")
+  pessoaNome      String?   @map("pessoa_nome")
+  descricao       String
+  dataEmissao     DateTime  @map("data_emissao") @db.Date
+  dataVencimento  DateTime  @map("data_vencimento") @db.Date
+  valorOriginal   Decimal   @map("valor_original") @db.Decimal(10, 2)
+  desconto        Decimal?  @default(0) @db.Decimal(10, 2)
+  juros           Decimal?  @default(0) @db.Decimal(10, 2)
+  multa           Decimal?  @default(0) @db.Decimal(10, 2)
+  valorLiquido    Decimal   @map("valor_liquido") @db.Decimal(10, 2)
+  status          String?   @default("ABERTO") // ABERTO, PARCIAL, PAGO, CANCELADO
+  observacao      String?
+  origem          String?   // MANUAL, AGENDA, PDV, COMPRAS
+  origemId        Int?      @map("origem_id")
+  categoriaId     Int?      @map("categoria_id")
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+  atualizadoEm    DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+  categoria       CategoriaFinanceira? @relation(fields: [categoriaId], references: [id])
+  baixas          BaixaTitulo[]
+
+  @@index([dataVencimento])
+  @@map("titulos_financeiros")
+}
+
+model BaixaTitulo {
+  id              Int       @id @default(autoincrement())
+  tituloId        Int       @map("titulo_id")
+  contaId         Int?      @map("conta_id")
+  data            DateTime  @default(now())
+  valor           Decimal   @db.Decimal(10, 2)
+  formaPagamento  String?   @map("forma_pagamento")
+  observacao      String?
+  usuarioId       Int?      @map("usuario_id")
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+
+  titulo          TituloFinanceiro @relation(fields: [tituloId], references: [id], onDelete: Cascade)
+  conta           ContaBancaria?   @relation(fields: [contaId], references: [id])
+  usuario         Usuario?         @relation(fields: [usuarioId], references: [id])
+
+  @@map("baixas_titulos")
+}
+
+// 14. Movimentação de Contas
+model MovimentoConta {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int       @map("empresa_id")
+  contaId         Int       @map("conta_id")
+  data            DateTime  @default(now())
+  tipo            String    // ENTRADA, SAIDA, TRANSFERENCIA
+  valor           Decimal   @db.Decimal(10, 2)
+  historico       String?
+  categoriaId     Int?      @map("categoria_id")
+  referenciaTipo  String?   @map("referencia_tipo")
+  referenciaId    Int?      @map("referencia_id")
+  conciliado      Boolean?  @default(false)
+  observacao      String?
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+  conta           ContaBancaria @relation(fields: [contaId], references: [id])
+  categoria       CategoriaFinanceira? @relation(fields: [categoriaId], references: [id])
+
+  @@map("movimentos_contas")
+}
+
+// 15. Cartões
+model OperadoraCartao {
+  id                  Int       @id @default(autoincrement())
+  empresaId           Int       @map("empresa_id")
+  nome                String
+  taxaDebito          Decimal?  @default(0) @map("taxa_debito") @db.Decimal(5, 2)
+  taxaCreditoAvista   Decimal?  @default(0) @map("taxa_credito_avista") @db.Decimal(5, 2)
+  taxaCreditoParcelado Decimal? @default(0) @map("taxa_credito_parcelado") @db.Decimal(5, 2)
+  diasLiquidezDebito  Int?      @default(1) @map("dias_liquidez_debito")
+  diasLiquidezCredito Int?      @default(30) @map("dias_liquidez_credito")
+  ativo               Boolean   @default(true)
+  criadoEm            DateTime  @default(now()) @map("criado_em")
+
+  empresa             Empresa   @relation(fields: [empresaId], references: [id])
+  recebiveis          RecebivelCartao[]
+  transacoesCaixa     TransacaoCaixa[]
+
+  @@map("operadoras_cartao")
+}
+
+model RecebivelCartao {
+  id                      Int       @id @default(autoincrement())
+  empresaId               Int       @map("empresa_id")
+  operadoraId             Int       @map("operadora_id")
+  dataVenda               DateTime  @map("data_venda") @db.Date
+  origem                  String?
+  origemId                Int?      @map("origem_id")
+  clienteId               Int?      @map("cliente_id")
+  valorBruto              Decimal   @map("valor_bruto") @db.Decimal(10, 2)
+  taxaPercentual          Decimal?  @map("taxa_percentual") @db.Decimal(5, 2)
+  valorTaxa               Decimal?  @map("valor_taxa") @db.Decimal(10, 2)
+  valorLiquidoPrevisto    Decimal   @map("valor_liquido_previsto") @db.Decimal(10, 2)
+  bandeira                String?
+  modalidade              String?
+  parcelas                Int?      @default(1)
+  parcelaNumero           Int?      @default(1) @map("parcela_numero")
+  dataPrevistaRecebimento DateTime? @map("data_prevista_recebimento") @db.Date
+  status                  String?   @default("ABERTO")
+  valorRecebidoAcumulado  Decimal?  @default(0) @map("valor_recebido_acumulado") @db.Decimal(10, 2)
+  conciliado              Boolean?  @default(false)
+  observacao              String?
+  criadoEm                DateTime  @default(now()) @map("criado_em")
+
+  empresa                 Empresa   @relation(fields: [empresaId], references: [id])
+  operadora               OperadoraCartao @relation(fields: [operadoraId], references: [id])
+  cliente                 Cliente?  @relation(fields: [clienteId], references: [id])
+
+  @@map("recebiveis_cartao")
+}
+
+// 16. Contratos
+model Contrato {
+  id                  Int       @id @default(autoincrement())
+  empresaId           Int       @map("empresa_id")
+  numero              String?
+  clienteId           Int       @map("cliente_id")
+  petId               Int?      @map("pet_id")
+  planoId             Int?      @map("plano_id")
+  ativo               Boolean   @default(true)
+  levaETraz           String?   @default("Não") @map("leva_e_traz")
+  recorrente          Boolean?  @default(false)
+  valor               Decimal   @db.Decimal(10, 2)
+  valorTotal          Decimal   @map("valor_total") @db.Decimal(10, 2)
+  prazoVencimentoDias Int?      @default(5) @map("prazo_vencimento_dias")
+  agendamento         String?   @default("SEM")
+  diasUsoPlano        Json?     @map("dias_uso_plano")
+  dataInicioContrato  DateTime? @map("data_inicio_contrato") @db.Date
+  textoContratoSnapshot String? @map("texto_contrato_snapshot")
+  observacao          String?
+  criadoEm            DateTime  @default(now()) @map("criado_em")
+  atualizadoEm        DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  empresa             Empresa   @relation(fields: [empresaId], references: [id])
+  cliente             Cliente   @relation(fields: [clienteId], references: [id])
+  pet                 Pet?      @relation(fields: [petId], references: [id])
+  plano               Produto?  @relation(fields: [planoId], references: [id])
+  agendamentos        Agendamento[]
+
+  @@map("contratos")
+}
+
+// 17. Agendamentos
+model Agendamento {
+  id                  Int       @id @default(autoincrement())
+  empresaId           Int       @map("empresa_id")
+  clienteId           Int       @map("cliente_id")
+  petId               Int       @map("pet_id")
+  profissionalId      Int?      @map("profissional_id")
+  servico             String?
+  servicoId           Int?      @map("servico_id")
+  dataInicio          DateTime  @map("data_inicio")
+  dataFim             DateTime  @map("data_fim")
+  status              String?   @default("AGENDADO")
+  observacao          String?
+  valor               Decimal?  @default(0) @db.Decimal(10, 2)
+  formaPagamento      String?   @map("forma_pagamento")
+  desconto            Decimal?  @default(0) @db.Decimal(10, 2)
+  valorTotal          Decimal?  @default(0) @map("valor_total") @db.Decimal(10, 2)
+  observacoesFinanceiro String? @map("observacoes_financeiro")
+  origemServico       String?   @default("AVULSO") @map("origem_servico")
+  planoId             Int?      @map("plano_id")
+  planoConsumoPendente Boolean? @default(false) @map("plano_consumo_pendente")
+  criadoEm            DateTime  @default(now()) @map("criado_em")
+  atualizadoEm        DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  empresa             Empresa   @relation(fields: [empresaId], references: [id])
+  cliente             Cliente   @relation(fields: [clienteId], references: [id])
+  pet                 Pet       @relation(fields: [petId], references: [id])
+  profissional        Profissional? @relation(fields: [profissionalId], references: [id])
+  servicoRef          Produto?  @relation(fields: [servicoId], references: [id])
+  plano               Contrato? @relation(fields: [planoId], references: [id])
+
+  @@index([dataInicio])
+  @@map("agendamentos")
+}
+
+// 18. Vendas (PDV)
+model Venda {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int       @map("empresa_id")
+  clienteId       Int?      @map("cliente_id")
+  petId           Int?      @map("pet_id")
+  dataVenda       DateTime  @default(now()) @map("data_venda")
+  subtotal        Decimal   @db.Decimal(10, 2)
+  desconto        Decimal?  @default(0) @db.Decimal(10, 2)
+  total           Decimal   @db.Decimal(10, 2)
+  formaPagamento  String?   @map("forma_pagamento")
+  valorRecebido   Decimal?  @map("valor_recebido") @db.Decimal(10, 2)
+  troco           Decimal?  @map("troco") @db.Decimal(10, 2)
+  statusPagamento String?   @default("PAGO") @map("status_pagamento")
+  observacao      String?
+  usuarioId       Int?      @map("usuario_id")
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+  cliente         Cliente?  @relation(fields: [clienteId], references: [id])
+  pet             Pet?      @relation(fields: [petId], references: [id])
+  usuario         Usuario?  @relation(fields: [usuarioId], references: [id])
+  itens           ItemVenda[]
+
+  @@index([dataVenda])
+  @@map("vendas")
+}
+
+model ItemVenda {
+  id          Int       @id @default(autoincrement())
+  vendaId     Int       @map("venda_id")
+  produtoId   Int?      @map("produto_id")
+  nome        String?
+  preco       Decimal   @db.Decimal(10, 2)
+  quantidade  Decimal   @db.Decimal(10, 3)
+  subtotal    Decimal   @db.Decimal(10, 2)
+
+  venda       Venda     @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  produto     Produto?  @relation(fields: [produtoId], references: [id])
+
+  @@map("itens_venda")
+}
+
+// 19. Caixa (Frente de Caixa)
+model CaixaDiario {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       Int       @map("empresa_id")
+  data            DateTime  @db.Date
+  status          String?   @default("aberto")
+  saldoInicial    Decimal?  @default(0) @map("saldo_inicial") @db.Decimal(10, 2)
+  saldoFinal      Decimal?  @default(0) @map("saldo_final") @db.Decimal(10, 2)
+  usuarioAbertura String?   @map("usuario_abertura")
+  usuarioFechamento String? @map("usuario_fechamento")
+  dtAbertura      DateTime? @default(now()) @map("dt_abertura")
+  dtFechamento    DateTime? @map("dt_fechamento")
+  observacoes     String?
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+  atualizadoEm    DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id])
+  transacoes      TransacaoCaixa[]
+
+  @@index([data])
+  @@map("caixas_diarios")
+}
+
+model TransacaoCaixa {
+  id              String    @id @default(uuid()) @db.Uuid
+  caixaId         String    @map("caixa_id") @db.Uuid
+  tipo            String    // dinheiro, pix, debito, credito, crediario
+  subtipo         String?
+  descricao       String?
+  valor           Decimal   @db.Decimal(10, 2)
+  origem          String?
+  referenciaId    String?   @map("referencia_id")
+  referenciaTipo  String?   @map("referencia_tipo")
+  operadoraId     Int?      @map("operadora_id")
+  statusConciliacao String? @default("pendente") @map("status_conciliacao")
+  usuarioCriacao  String?   @map("usuario_criacao")
+  notas           String?
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+  atualizadoEm    DateTime  @default(now()) @updatedAt @map("atualizado_em")
+  deletadoEm      DateTime? @map("deletado_em")
+
+  caixa           CaixaDiario @relation(fields: [caixaId], references: [id], onDelete: Cascade)
+  operadora       OperadoraCartao? @relation(fields: [operadoraId], references: [id])
+  parcelas        ParcelaCrediario[]
+
+  @@map("transacoes_caixa")
+}
+
+model ParcelaCrediario {
+  id              String    @id @default(uuid()) @db.Uuid
+  transacaoId     String    @map("transacao_id") @db.Uuid
+  clienteId       Int?      @map("cliente_id")
+  numParcela      Int       @map("num_parcela")
+  totalParcelas   Int       @map("total_parcelas")
+  valorParcela    Decimal   @map("valor_parcela") @db.Decimal(10, 2)
+  intervaloDias   Int?      @map("intervalo_dias")
+  dataVencimento  DateTime  @map("data_vencimento") @db.Date
+  dataPagamento   DateTime? @map("data_pagamento") @db.Date
+  status          String?   @default("pendente")
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+  atualizadoEm    DateTime  @default(now()) @updatedAt @map("atualizado_em")
+
+  transacao       TransacaoCaixa @relation(fields: [transacaoId], references: [id], onDelete: Cascade)
+  cliente         Cliente?       @relation(fields: [clienteId], references: [id])
+
+  @@map("parcelas_crediario")
+}

@@ -72,11 +72,12 @@ export default function Pets({ pets, setPets, clientes }: PetsProps) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (editingId !== null) {
       // Update existing pet
+      // TODO: Implement API update
       setPets((prev) =>
         prev.map((pet) =>
           pet.id === editingId
@@ -84,23 +85,34 @@ export default function Pets({ pets, setPets, clientes }: PetsProps) {
             : pet
         )
       );
+      handleCancel();
     } else {
       // Create new pet
-      const newPet: Pet = {
-        id: Date.now(),
-        dataCadastro: new Date().toLocaleDateString(),
-        nome: formData.nome || '',
-        especie: formData.especie || '',
-        raca: formData.raca || '',
-        porte: formData.porte || '',
-        pelagem: formData.pelagem || '',
-        clienteId: Number(formData.clienteId),
-        ...formData
-      } as Pet;
-      setPets((prev) => [...prev, newPet]);
-    }
+      try {
+        const response = await fetch('/api/sync/pets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...formData,
+            clienteId: Number(formData.clienteId),
+            dataCadastro: new Date().toLocaleDateString(),
+          }),
+        });
 
-    handleCancel();
+        if (!response.ok) {
+          const errorData = await response.json();
+          alert(`Erro ao salvar pet: ${errorData.error || response.statusText}`);
+          return;
+        }
+
+        const newPet = await response.json();
+        setPets((prev) => [newPet, ...prev]);
+        handleCancel();
+      } catch (error) {
+        console.error('Erro ao salvar pet:', error);
+        alert('Erro de conexão ao salvar pet.');
+      }
+    }
   };
 
   const handleEdit = (pet: Pet) => {
