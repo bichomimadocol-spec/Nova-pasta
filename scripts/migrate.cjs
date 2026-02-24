@@ -1,4 +1,10 @@
 const dotenv = require('dotenv');
+dotenv.config();
+
+console.log(
+  'DEBUG POSTGRES_URL:',
+  process.env.POSTGRES_URL ? 'DEFINIDA' : 'INDEFINIDA'
+);
 
 const { sql } = require('@vercel/postgres');
 const { db } = require('@vercel/postgres');
