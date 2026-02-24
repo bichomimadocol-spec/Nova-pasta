@@ -20,3 +20,4 @@ Para que o pipeline funcione corretamente, configure os seguintes Secrets no rep
 -   `npm run dev`: Inicia o servidor de desenvolvimento.
 -   `npm run build`: Compila o projeto para produção.
 -   `npm run migrate`: Executa as migrações do banco de dados.
+<!-- trigger actions -->
