@@ -4,7 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 
 export async function syncClientesToDB(cliente: Omit<Cliente, 'id' | 'dataCadastro'>) {
   try {
-    const response = await fetch(`${API_URL}/api/sync/clientes`, {
+    const response = await fetch(`${API_URL}/api/clientes`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -88,7 +88,7 @@ export async function syncAgendamentosToDB(agendamento: Omit<Agendamento, 'id'>)
 
 export async function getClientesFromDB(): Promise<Cliente[]> {
   try {
-    const response = await fetch(`${API_URL}/api/sync/clientes`);
+    const response = await fetch(`${API_URL}/api/clientes`);
     if (!response.ok) {
       throw new Error(`Erro ao buscar clientes: ${response.statusText}`);
     }
