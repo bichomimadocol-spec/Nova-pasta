@@ -1,5 +1,6 @@
-import { sql } from '@vercel/postgres';
-import dotenv from 'dotenv';
+const { sql } = require('@vercel/postgres');
+// se estiver usando outras coisas, por exemplo:
+const { db } = require('@vercel/postgres');
 
 dotenv.config();
 
