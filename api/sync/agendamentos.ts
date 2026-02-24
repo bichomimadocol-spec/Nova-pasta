@@ -1,4 +1,4 @@
-import { getAgendamentos, createAgendamento } from './db';
+// api/sync/agendamentos.ts
 
 export default async function handler(req: any, res: any) {
   // CORS headers
@@ -15,25 +15,8 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  try {
-    if (req.method === 'GET') {
-      const agendamentos = await getAgendamentos();
-      return res.status(200).json(agendamentos);
-    }
-
-    if (req.method === 'POST') {
-      const { clienteId, petId, servico, dataInicio, dataFim } = req.body;
-      if (!clienteId || !servico || !dataInicio || !dataFim) {
-        return res.status(400).json({ error: 'Dados obrigatórios faltando' });
-      }
-
-      const novoAgendamento = await createAgendamento(req.body);
-      return res.status(201).json(novoAgendamento);
-    }
-
-    return res.status(405).json({ error: 'Method not allowed' });
-  } catch (error: any) {
-    console.error('Error in agendamentos handler:', error);
-    return res.status(500).json({ error: error.message });
-  }
+  // Endpoint desativado no ambiente atual
+  return res.status(501).json({
+    error: 'Endpoint /api/sync/agendamentos desativado no ambiente de produção.',
+  });
 }
