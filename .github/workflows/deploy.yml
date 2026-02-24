@@ -21,6 +21,11 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Debug env
+        run: printenv | sort
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+
       - name: Run Migrations
         run: npm run migrate
         env:
