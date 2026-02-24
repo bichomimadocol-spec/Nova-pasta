@@ -6,19 +6,23 @@ console.log(
   process.env.POSTGRES_URL ? 'DEFINIDA' : 'INDEFINIDA'
 );
 
-const { sql } = require('@vercel/postgres');
-const { db } = require('@vercel/postgres');
+const { Client } = require('pg');
 
-dotenv.config();
+const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error('Nenhuma connection string em POSTGRES_URL ou DATABASE_URL');
+}
 
 async function migrate() {
-  const client = await db.connect();
+  const client = new Client({ connectionString });
+  await client.connect();
 
   try {
     console.log('Iniciando migração...');
 
     // 1. Clientes
-    await client.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS clientes (
         id SERIAL PRIMARY KEY,
         nome VARCHAR(255) NOT NULL,
@@ -35,25 +39,25 @@ async function migrate() {
         cep VARCHAR(10),
         observacao TEXT
       );
-    `;
+    `);
 
     // Add PJ columns if not exists (Soft Add)
     try {
-      await client.sql`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS cnpj VARCHAR(18);`;
-      await client.sql`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS razao_social VARCHAR(255);`;
-      await client.sql`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS nome_fantasia VARCHAR(255);`;
-      await client.sql`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS inscricao_estadual VARCHAR(20);`;
-      await client.sql`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS ramo_atividade VARCHAR(255);`;
-      await client.sql`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS responsavel_nome VARCHAR(255);`;
-      await client.sql`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS responsavel_cpf VARCHAR(14);`;
-      await client.sql`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS responsavel_email VARCHAR(255);`;
-      await client.sql`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS responsavel_telefone VARCHAR(20);`;
+      await client.query('ALTER TABLE clientes ADD COLUMN IF NOT EXISTS cnpj VARCHAR(18);');
+      await client.query('ALTER TABLE clientes ADD COLUMN IF NOT EXISTS razao_social VARCHAR(255);');
+      await client.query('ALTER TABLE clientes ADD COLUMN IF NOT EXISTS nome_fantasia VARCHAR(255);');
+      await client.query('ALTER TABLE clientes ADD COLUMN IF NOT EXISTS inscricao_estadual VARCHAR(20);');
+      await client.query('ALTER TABLE clientes ADD COLUMN IF NOT EXISTS ramo_atividade VARCHAR(255);');
+      await client.query('ALTER TABLE clientes ADD COLUMN IF NOT EXISTS responsavel_nome VARCHAR(255);');
+      await client.query('ALTER TABLE clientes ADD COLUMN IF NOT EXISTS responsavel_cpf VARCHAR(14);');
+      await client.query('ALTER TABLE clientes ADD COLUMN IF NOT EXISTS responsavel_email VARCHAR(255);');
+      await client.query('ALTER TABLE clientes ADD COLUMN IF NOT EXISTS responsavel_telefone VARCHAR(20);');
     } catch (e) {
       console.log('Colunas PJ já existem ou erro ao adicionar:', e.message);
     }
 
     // 2. Pets
-    await client.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS pets (
         id SERIAL PRIMARY KEY,
         nome VARCHAR(255) NOT NULL,
@@ -68,10 +72,10 @@ async function migrate() {
         chip VARCHAR(50),
         observacao TEXT
       );
-    `;
+    `);
 
     // 3. Produtos
-    await client.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS produtos (
         id SERIAL PRIMARY KEY,
         tipo VARCHAR(50),
@@ -85,10 +89,10 @@ async function migrate() {
         estoque_minimo INTEGER DEFAULT 0,
         data_cadastro DATE DEFAULT CURRENT_DATE
       );
-    `;
+    `);
 
     // 4. Vendas
-    await client.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS vendas (
         id SERIAL PRIMARY KEY,
         cliente_id INTEGER REFERENCES clientes(id),
@@ -99,10 +103,10 @@ async function migrate() {
         status_pagamento VARCHAR(20) DEFAULT 'PAGO',
         observacao TEXT
       );
-    `;
+    `);
 
     // 5. Usuários
-    await client.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id SERIAL PRIMARY KEY,
         nome VARCHAR(255) NOT NULL,
@@ -110,10 +114,10 @@ async function migrate() {
         senha VARCHAR(255) NOT NULL,
         perfil VARCHAR(50) NOT NULL
       );
-    `;
+    `);
 
     // 6. Caixa Diário
-    await client.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS daily_cash_register (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         data DATE UNIQUE NOT NULL,
@@ -128,10 +132,10 @@ async function migrate() {
         criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `;
+    `);
 
     // 7. Operadoras de Cartão
-    await client.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS card_operators (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         nome VARCHAR(255) NOT NULL,
@@ -141,10 +145,10 @@ async function migrate() {
         criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `;
+    `);
 
     // 8. Contas de Pagamento
-    await client.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS payment_accounts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         tipo_pagamento VARCHAR(20) CHECK (tipo_pagamento IN ('pix', 'banco')) NOT NULL,
@@ -156,10 +160,10 @@ async function migrate() {
         criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `;
+    `);
 
     // 9. Transações de Caixa
-    await client.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS cash_transactions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         caixa_id UUID REFERENCES daily_cash_register(id),
@@ -178,10 +182,10 @@ async function migrate() {
         deletado_em TIMESTAMP,
         notas TEXT
       );
-    `;
+    `);
 
     // 10. Parcelas de Crediário
-    await client.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS crediario_parcelas (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         transacao_id UUID REFERENCES cash_transactions(id),
@@ -196,10 +200,10 @@ async function migrate() {
         criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `;
+    `);
 
     // 11. Planos
-    await client.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS planos (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         nome VARCHAR(255) NOT NULL UNIQUE,
@@ -214,10 +218,10 @@ async function migrate() {
         atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         deletado_em TIMESTAMP
       );
-    `;
+    `);
 
     // 12. Serviços do Plano
-    await client.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS plano_servicos (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         plano_id UUID NOT NULL REFERENCES planos(id) ON DELETE CASCADE,
@@ -227,20 +231,19 @@ async function migrate() {
         descricao_adicional TEXT,
         criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        
         CONSTRAINT chk_quantidade_positiva CHECK (quantidade > 0),
         CONSTRAINT chk_frequencia_positiva CHECK (frequencia_mes > 0),
         CONSTRAINT unique_plano_servico UNIQUE(plano_id, servico_id)
       );
-    `;
+    `);
 
     // Seed Admin User if not exists
-    const { rowCount } = await client.sql`SELECT * FROM usuarios WHERE email = 'admin'`;
-    if (rowCount === 0) {
-      await client.sql`
+    const result = await client.query("SELECT * FROM usuarios WHERE email = 'admin'");
+    if (result.rowCount === 0) {
+      await client.query(`
         INSERT INTO usuarios (nome, email, senha, perfil)
         VALUES ('Administrador', 'admin', '123', 'ADMIN');
-      `;
+      `);
       console.log('Usuário admin criado.');
     }
 
