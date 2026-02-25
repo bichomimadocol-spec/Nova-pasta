@@ -148,13 +148,9 @@ export default function ProdutoForm({ initialData, onSubmit, onCancel }: Produto
   };
 
   const handleSubmit = (e: React.FormEvent) => {
+    console.log('SALVAR CLICADO');
     e.preventDefault();
     console.log('Form submitted with data:', formData);
-
-    if (!formData.nome || !formData.preco) {
-      alert('Nome e preço são obrigatórios');
-      return;
-    }
 
     onSubmit(formData);
   };
@@ -474,7 +470,7 @@ export default function ProdutoForm({ initialData, onSubmit, onCancel }: Produto
         <button type="button" onClick={onCancel} className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium">
           Cancelar
         </button>
-        <button type="submit" className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 shadow-sm font-medium">
+        <button type="submit" onClick={() => console.log('BOTAO CLICADO')} className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 shadow-sm font-medium">
           Salvar
         </button>
       </div>
