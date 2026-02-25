@@ -536,7 +536,7 @@ export default function App() {
         ]);
         
         if (clientesData && clientesData.length > 0) {
-          setClientes(clientesData);
+          setClientes(clientesData.map((c: Cliente) => ({ ...c, id: Number(c.id) })));
         }
         
         if (vendasData && vendasData.length > 0) {

@@ -134,9 +134,9 @@ export default function Pets({ pets, setPets, clientes }: PetsProps) {
         const novoPet: Pet = {
           id: data.id,
           nome: data.nome,
-          clienteId: data.cliente_id,
-          especie: data.especie || '',
-          raca: data.raca || '',
+          clienteId: Number(data.cliente_id || formData.clienteId),
+          especie: formData.especie || '',
+          raca: formData.raca || '',
           genero: formData.genero || '',
           porte: formData.porte || '',
           pelagem: formData.pelagem || '',
@@ -148,6 +148,7 @@ export default function Pets({ pets, setPets, clientes }: PetsProps) {
           tags: formData.tags || '',
           alergias: formData.alergias || '',
           observacao: formData.observacao || '',
+          dataCadastro: new Date().toISOString(), // campo obrigatório
         };
 
         setPets((prev) => [novoPet, ...prev]);
