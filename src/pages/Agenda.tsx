@@ -212,8 +212,8 @@ interface AgendaProps {
 type ViewType = 'DIA' | 'SEMANA' | 'MES';
 
 export default function Agenda({ 
-  agendamentos, 
-  setAgendamentos, 
+  agendamentos: propAgendamentos, 
+  setAgendamentos: propSetAgendamentos, 
   clientes, 
   pets, 
   contratos = [], 
@@ -221,6 +221,7 @@ export default function Agenda({
   operadorasCartao = [], 
   onIntegrarFinanceiro 
 }: AgendaProps) {
+  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>('DIA');
   const [filterStatus, setFilterStatus] = useState<string>('TODAS');
@@ -228,6 +229,24 @@ export default function Agenda({
   
   // Selection State
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  // Carregar agendamentos da API
+  useEffect(() => {
+    const loadAgendamentos = async () => {
+      try {
+        const response = await fetch('/api/agendamentos');
+        if (response.ok) {
+          const data = await response.json();
+          setAgendamentos(data);
+        } else {
+          console.error('Erro ao carregar agendamentos:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Erro de conexão ao carregar agendamentos:', error);
+      }
+    };
+    loadAgendamentos();
+  }, []);
   const [showActionMenu, setShowActionMenu] = useState(false);
 
   // Modal/Panel State
