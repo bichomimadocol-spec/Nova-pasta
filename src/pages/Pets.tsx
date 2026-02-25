@@ -130,7 +130,27 @@ export default function Pets({ pets, setPets, clientes }: PetsProps) {
           return;
         }
 
-        setPets((prev) => [data, ...prev]);
+        // Normalizar o retorno da API (snake_case) para o formato da interface Pet (camelCase)
+        const novoPet: Pet = {
+          id: data.id,
+          nome: data.nome,
+          clienteId: data.cliente_id,
+          especie: data.especie || '',
+          raca: data.raca || '',
+          genero: formData.genero || '',
+          porte: formData.porte || '',
+          pelagem: formData.pelagem || '',
+          dataNascimento: formData.dataNascimento || '',
+          idade: formData.idade || '',
+          chip: formData.chip || '',
+          pedigreeRg: formData.pedigreeRg || '',
+          alimentacao: formData.alimentacao || '',
+          tags: formData.tags || '',
+          alergias: formData.alergias || '',
+          observacao: formData.observacao || '',
+        };
+
+        setPets((prev) => [novoPet, ...prev]);
         handleCancel();
       } catch (error) {
         console.error('Erro ao salvar pet:', error);
