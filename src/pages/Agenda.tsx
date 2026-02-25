@@ -62,9 +62,7 @@ const AgendaDayView: React.FC<AgendaDayViewProps> = ({
   const dayAgendamentos = useMemo(() => {
     const result = filteredAgendamentos.filter(a => {
       const d = new Date(a.dataInicio);
-      return d.getFullYear() === date.getFullYear() &&
-             d.getMonth() === date.getMonth() &&
-             d.getDate() === date.getDate();
+      return d.toDateString() === date.toDateString();
     });
     console.log(`dayAgendamentos for ${date.toDateString()}: ${result.length} agendamentos`);
     return result;
@@ -100,6 +98,8 @@ const AgendaDayView: React.FC<AgendaDayViewProps> = ({
             </div>
         </div>
       )}
+
+      {console.log('DIA - dayAgendamentos:', dayAgendamentos.length, dayAgendamentos)}
 
       {/* Header Row */}
       <div className="flex bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase py-3">
@@ -908,9 +908,7 @@ export default function Agenda({
   const getAgendamentosForDay = (date: Date) => {
     const result = filteredAgendamentos.filter(a => {
       const d = new Date(a.dataInicio);
-      return d.getFullYear() === date.getFullYear() &&
-             d.getMonth() === date.getMonth() &&
-             d.getDate() === date.getDate();
+      return d.toDateString() === date.toDateString();
     });
     console.log(`getAgendamentosForDay for ${date.toDateString()}: ${result.length} agendamentos`);
     return result;
@@ -932,7 +930,6 @@ export default function Agenda({
       const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59);
       return d >= startDate && d <= endDate;
     });
-    console.log(`Indicators for view ${view}, start ${start.toDateString()}, end ${end.toDateString()}: inRange ${inRange.length}, pago ${pago}, pendente ${pendente}, atendimentos ${atendimentos}, planos ${planos}`);
 
     inRange.forEach(a => {
       atendimentos++;
@@ -1118,7 +1115,14 @@ export default function Agenda({
             onSelectAll={handleSelectAll}
           />
         )}
-        {view === 'SEMANA' && (
+        {view === 'SEMANA' && (() => {
+            const semanaAgendamentos = [];
+            for (let i = 0; i < 7; i++) {
+                const day = addDays(getStartOfWeek(currentDate), i);
+                semanaAgendamentos.push(...getAgendamentosForDay(day));
+            }
+            console.log('SEMANA - semanaAgendamentos:', semanaAgendamentos.length, semanaAgendamentos);
+            return (
             // Reusing logic for week view but simpler rendering
             <div className="flex overflow-x-auto border rounded-lg bg-white shadow-sm">
                 <div className="flex flex-col min-w-[80px] border-r bg-gray-50 sticky left-0 z-10">
@@ -1178,7 +1182,8 @@ export default function Agenda({
                     );
                 })}
             </div>
-        )}
+            );
+        })()}
         {view === 'MES' && renderMonthView()}
       </div>
 
