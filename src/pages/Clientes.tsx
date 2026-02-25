@@ -241,7 +241,11 @@ export default function Clientes({ clientes, setClientes, pets, setPets }: Clien
       try {
         const newCliente = await syncClientesToDB(formData);
         setClientes((prev) => [newCliente, ...prev]); // Add to top of list
-        handleCancel();
+        // Navegar para edição do cliente recém-criado
+        setEditingId(newCliente.id);
+        setView('form');
+        // Atualizar formData com os dados retornados (incluindo id)
+        setFormData({ ...formData, id: newCliente.id, dataCadastro: newCliente.dataCadastro });
       } catch (error) {
         console.error('Erro ao salvar cliente:', error);
         alert('Erro de conexão ao salvar cliente.');
