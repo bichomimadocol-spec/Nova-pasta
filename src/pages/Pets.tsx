@@ -67,46 +67,7 @@ export default function Pets({ pets, setPets, clientes }: PetsProps) {
     }
   }, [location.state]);
 
-  // Carregar pets da API
-  useEffect(() => {
-    const loadPets = async () => {
-      try {
-        const response = await fetch('/api/pets', { cache: 'no-store' });
-        if (!response.ok) {
-          console.error('Erro ao carregar pets:', response.statusText);
-          return;
-        }
-
-        const data = await response.json();
-        console.log('PETS_API', data);
-
-        const petsNormalizados: Pet[] = data.map((row: any) => ({
-          id: row.id,
-          nome: row.nome,
-          clienteId: row.cliente_id,
-          especie: row.especie || '',
-          raca: row.raca || '',
-          genero: '',            // ou mantenha do tipo se existir
-          porte: '',
-          pelagem: '',
-          dataNascimento: row.data_nascimento || '',
-          idade: '',
-          chip: '',
-          pedigreeRg: '',
-          alimentacao: '',
-          tags: '',
-          alergias: '',
-          observacao: row.observacoes || '',
-          dataCadastro: new Date().toISOString(),
-        }));
-
-        setPets(petsNormalizados);
-      } catch (error) {
-        console.error('Erro de conexão ao carregar pets:', error);
-      }
-    };
-    loadPets();
-  }, [setPets, location.pathname]);
+  // Pets são carregados em App.tsx e garantidos em Clientes.tsx
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

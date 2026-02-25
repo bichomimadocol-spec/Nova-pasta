@@ -557,7 +557,7 @@ export default function App() {
           setProdutos(produtosData);
         }
 
-        if (petsData && petsData.length > 0) {
+        if (petsData) {
           setPets(petsData);
         }
       } catch (error) {

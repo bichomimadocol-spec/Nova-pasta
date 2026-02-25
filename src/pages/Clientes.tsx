@@ -103,6 +103,24 @@ export default function Clientes({ clientes, setClientes, pets, setPets }: Clien
     }
   }, [showPetModal]);
 
+  // Garantir que pets sejam carregados
+  useEffect(() => {
+    const loadPetsIfNeeded = async () => {
+      if (!pets || pets.length === 0) {
+        try {
+          const response = await fetch('/api/pets');
+          if (response.ok) {
+            const data = await response.json();
+            setPets(data);
+          }
+        } catch (error) {
+          console.error('Erro ao carregar pets:', error);
+        }
+      }
+    };
+    loadPetsIfNeeded();
+  }, [pets, setPets]);
+
   // --- HANDLERS ---
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
