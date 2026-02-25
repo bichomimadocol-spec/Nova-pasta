@@ -36,7 +36,16 @@ export default async function handler(req: any, res: any) {
 
     if (req.method === 'GET') {
       const result = await pool.query('SELECT * FROM pets ORDER BY id DESC');
-      return res.status(200).json(result.rows);
+      const pets = result.rows.map((row: any) => ({
+        id: row.id,
+        clienteId: row.cliente_id, // mapear para camelCase
+        nome: row.nome,
+        especie: row.especie,
+        raca: row.raca,
+        dataNascimento: row.data_nascimento,
+        observacao: row.observacoes,
+      }));
+      return res.status(200).json(pets);
     }
 
     if (req.method === 'POST') {
@@ -52,7 +61,18 @@ export default async function handler(req: any, res: any) {
         [cliente_id, nome, especie || null, raca || null, data_nascimento || null, observacoes || null]
       );
 
-      return res.status(201).json(result.rows[0]);
+      const row = result.rows[0];
+      const novoPet = {
+        id: row.id,
+        clienteId: row.cliente_id,
+        nome: row.nome,
+        especie: row.especie,
+        raca: row.raca,
+        dataNascimento: row.data_nascimento,
+        observacao: row.observacoes,
+      };
+
+      return res.status(201).json(novoPet);
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
