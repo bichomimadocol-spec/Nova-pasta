@@ -89,7 +89,7 @@ export default function Pets({ pets, setPets, clientes }: PetsProps) {
     } else {
       // Create new pet
       try {
-        const response = await fetch('/api/sync/pets', {
+        const response = await fetch('/api/pets', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

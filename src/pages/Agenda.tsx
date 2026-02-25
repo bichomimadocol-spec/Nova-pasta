@@ -563,7 +563,7 @@ export default function Agenda({
       // Create new agendamento
       (async () => {
         try {
-          const response = await fetch('/api/sync/agendamentos', {
+          const response = await fetch('/api/agendamentos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(finalData),

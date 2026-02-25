@@ -437,7 +437,7 @@ export default function Atendimento({
 
     // 6. Finalize
     try {
-      const response = await fetch('/api/sync/vendas', {
+      const response = await fetch('/api/vendas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(novaVenda),

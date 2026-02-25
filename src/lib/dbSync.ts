@@ -1,89 +1,77 @@
 import { Cliente, Venda, Pet, Agendamento } from '../App';
 
+// Se VITE_API_URL não estiver definida, usa base relativa ('')
 const API_URL = import.meta.env.VITE_API_URL || '';
+console.log('API_URL =>', API_URL);
 
-export async function syncClientesToDB(cliente: Omit<Cliente, 'id' | 'dataCadastro'>) {
-  try {
-    const response = await fetch(`${API_URL}/api/clientes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(cliente),
-    });
+export async function syncClientesToDB(
+  cliente: Omit<Cliente, 'id' | 'dataCadastro'>
+) {
+  const response = await fetch(`${API_URL}/api/clientes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(cliente),
+  });
 
-    if (!response.ok) {
-      throw new Error(`Erro ao sincronizar cliente: ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Erro no sync de clientes:', error);
-    throw error;
+  if (!response.ok) {
+    throw new Error(`Erro ao sincronizar cliente: ${response.statusText}`);
   }
+
+  return await response.json();
 }
 
 export async function syncVendasToDB(venda: Omit<Venda, 'id'>) {
-  try {
-    const response = await fetch(`${API_URL}/api/sync/vendas`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(venda),
-    });
+  const response = await fetch(`${API_URL}/api/vendas`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(venda),
+  });
 
-    if (!response.ok) {
-      throw new Error(`Erro ao sincronizar venda: ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Erro no sync de vendas:', error);
-    throw error;
+  if (!response.ok) {
+    throw new Error(`Erro ao sincronizar venda: ${response.statusText}`);
   }
+
+  return await response.json();
 }
 
 export async function syncPetsToDB(pet: Omit<Pet, 'id' | 'dataCadastro'>) {
-  try {
-    const response = await fetch(`${API_URL}/api/sync/pets`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(pet),
-    });
+  const response = await fetch(`${API_URL}/api/pets`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(pet),
+  });
 
-    if (!response.ok) {
-      throw new Error(`Erro ao sincronizar pet: ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Erro no sync de pets:', error);
-    throw error;
+  if (!response.ok) {
+    throw new Error(`Erro ao sincronizar pet: ${response.statusText}`);
   }
+
+  return await response.json();
 }
 
-export async function syncAgendamentosToDB(agendamento: Omit<Agendamento, 'id'>) {
-  try {
-    const response = await fetch(`${API_URL}/api/sync/agendamentos`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(agendamento),
-    });
+export async function syncAgendamentosToDB(
+  agendamento: Omit<Agendamento, 'id'>
+) {
+  const response = await fetch(`${API_URL}/api/agendamentos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(agendamento),
+  });
 
-    if (!response.ok) {
-      throw new Error(`Erro ao sincronizar agendamento: ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Erro no sync de agendamentos:', error);
-    throw error;
+  if (!response.ok) {
+    throw new Error(
+      `Erro ao sincronizar agendamento: ${response.statusText}`
+    );
   }
+
+  return await response.json();
 }
 
 export async function getClientesFromDB(): Promise<Cliente[]> {
@@ -101,7 +89,7 @@ export async function getClientesFromDB(): Promise<Cliente[]> {
 
 export async function getVendasFromDB(): Promise<Venda[]> {
   try {
-    const response = await fetch(`${API_URL}/api/sync/vendas`);
+    const response = await fetch(`${API_URL}/api/vendas`);
     if (!response.ok) {
       throw new Error(`Erro ao buscar vendas: ${response.statusText}`);
     }
@@ -114,7 +102,7 @@ export async function getVendasFromDB(): Promise<Venda[]> {
 
 export async function getPetsFromDB(): Promise<Pet[]> {
   try {
-    const response = await fetch(`${API_URL}/api/sync/pets`);
+    const response = await fetch(`${API_URL}/api/pets`);
     if (!response.ok) {
       throw new Error(`Erro ao buscar pets: ${response.statusText}`);
     }
@@ -127,7 +115,7 @@ export async function getPetsFromDB(): Promise<Pet[]> {
 
 export async function getAgendamentosFromDB(): Promise<Agendamento[]> {
   try {
-    const response = await fetch(`${API_URL}/api/sync/agendamentos`);
+    const response = await fetch(`${API_URL}/api/agendamentos`);
     if (!response.ok) {
       throw new Error(`Erro ao buscar agendamentos: ${response.statusText}`);
     }
