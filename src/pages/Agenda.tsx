@@ -899,7 +899,10 @@ export default function Agenda({
 
   const getAgendamentosForDay = (date: Date) => {
     const dateStr = formatDate(date);
-    return filteredAgendamentos.filter(a => a.dataInicio.startsWith(dateStr));
+    const result = filteredAgendamentos.filter(a => a.dataInicio.startsWith(dateStr));
+    console.log('getAgendamentosForDay:', dateStr, 'filteredAgendamentos length:', filteredAgendamentos.length, 'result length:', result.length);
+    console.log('Sample dataInicio:', filteredAgendamentos.slice(0, 3).map(a => a.dataInicio));
+    return result;
   };
 
   // --- INDICATORS ---
@@ -966,7 +969,10 @@ export default function Agenda({
                   className={`h-24 border rounded-md p-2 cursor-pointer transition-all hover:shadow-md flex flex-col justify-between ${
                     isSelected ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'bg-white'
                   } ${isToday ? 'border-indigo-300' : 'border-gray-200'}`}
-                  onClick={() => setSelectedDayInMonth(day)}
+                  onClick={() => {
+                    console.log('Day clicked:', day, 'formatted:', formatDate(day));
+                    setSelectedDayInMonth(day);
+                  }}
                 >
                   <div className="flex justify-between items-start">
                     <span className={`text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-gray-700'}`}>{day.getDate()}</span>
@@ -1166,7 +1172,9 @@ export default function Agenda({
       </div>
 
       {/* MONTH VIEW OVERLAY (Portal) */}
-      {view === 'MES' && selectedDayInMonth && createPortal(
+      {view === 'MES' && selectedDayInMonth && (() => {
+        console.log('Rendering month overlay for:', selectedDayInMonth, formatDate(selectedDayInMonth));
+        return createPortal(
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setSelectedDayInMonth(null)}>
           <div className="bg-white rounded-lg shadow-xl w-[90%] max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center p-4 border-b bg-gray-50">
@@ -1195,7 +1203,8 @@ export default function Agenda({
           </div>
         </div>,
         document.body
-      )}
+      );
+      })()}
 
       {/* NEW APPOINTMENT MODAL */}
       {showModal && (
