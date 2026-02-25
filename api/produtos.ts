@@ -25,7 +25,6 @@ export default async function handler(req: any, res: any) {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS produtos (
         id SERIAL PRIMARY KEY,
-        tipo VARCHAR(20) DEFAULT 'Produto',
         nome TEXT NOT NULL,
         categoria TEXT,
         preco DECIMAL(10,2) NOT NULL,
@@ -37,7 +36,6 @@ export default async function handler(req: any, res: any) {
       const result = await pool.query('SELECT * FROM produtos ORDER BY id DESC');
       const produtos = result.rows.map((row: any) => ({
         id: row.id,
-        tipo: row.tipo,
         nome: row.nome,
         categoria: row.categoria,
         preco: parseFloat(row.preco),
@@ -53,15 +51,20 @@ export default async function handler(req: any, res: any) {
 
         console.log('Campos extraídos:', { tipo, nome, categoria, preco, estoque });
 
-        if (!nome || preco === undefined) {
+        const nomeValido = nome ?? null;
+        const categoriaValida = categoria ?? null;
+        const precoValido = preco ? Number(preco) : null;
+        const estoqueValido = estoque ? Number(estoque) : 0;
+
+        if (!nomeValido || precoValido === null) {
           console.log('Validação falhou: nome ou preco ausente');
           return res.status(400).json({ error: 'Nome e preço são obrigatórios' });
         }
 
         console.log('Executando query INSERT...');
         const result = await pool.query(
-          'INSERT INTO produtos (tipo, nome, categoria, preco, estoque) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-          [tipo || 'Produto', nome, categoria || null, preco, estoque || 0]
+          'INSERT INTO produtos (nome, categoria, preco, estoque) VALUES ($1, $2, $3, $4) RETURNING *',
+          [nomeValido, categoriaValida, precoValido, estoqueValido]
         );
 
         console.log('Query executada, resultado:', result.rows[0]);
@@ -69,7 +72,6 @@ export default async function handler(req: any, res: any) {
         const row = result.rows[0];
         const novoProduto = {
           id: row.id,
-          tipo: row.tipo,
           nome: row.nome,
           categoria: row.categoria,
           preco: parseFloat(row.preco),
