@@ -60,8 +60,12 @@ const AgendaDayView: React.FC<AgendaDayViewProps> = ({
   const formatDate = (d: Date) => d.toISOString().split('T')[0];
 
   const dayAgendamentos = useMemo(() => {
-    const dateStr = formatDate(date);
-    return filteredAgendamentos.filter(a => a.dataInicio.startsWith(dateStr));
+    return filteredAgendamentos.filter(a => {
+      const d = new Date(a.dataInicio);
+      return d.getFullYear() === date.getFullYear() &&
+             d.getMonth() === date.getMonth() &&
+             d.getDate() === date.getDate();
+    });
   }, [filteredAgendamentos, date]);
 
   const slots = [];
@@ -898,10 +902,12 @@ export default function Agenda({
   }, [agendamentos, filterStatus]);
 
   const getAgendamentosForDay = (date: Date) => {
-    const dateStr = formatDate(date);
-    const result = filteredAgendamentos.filter(a => a.dataInicio.startsWith(dateStr));
-    console.log('getAgendamentosForDay:', dateStr, 'filteredAgendamentos length:', filteredAgendamentos.length, 'result length:', result.length);
-    console.log('Sample dataInicio:', filteredAgendamentos.slice(0, 3).map(a => a.dataInicio));
+    const result = filteredAgendamentos.filter(a => {
+      const d = new Date(a.dataInicio);
+      return d.getFullYear() === date.getFullYear() &&
+             d.getMonth() === date.getMonth() &&
+             d.getDate() === date.getDate();
+    });
     return result;
   };
 
@@ -917,7 +923,9 @@ export default function Agenda({
 
     const inRange = agendamentos.filter(a => {
       const d = new Date(a.dataInicio);
-      return d >= start && d <= end;
+      const startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59);
+      return d >= startDate && d <= endDate;
     });
 
     inRange.forEach(a => {
@@ -969,10 +977,7 @@ export default function Agenda({
                   className={`h-24 border rounded-md p-2 cursor-pointer transition-all hover:shadow-md flex flex-col justify-between ${
                     isSelected ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'bg-white'
                   } ${isToday ? 'border-indigo-300' : 'border-gray-200'}`}
-                  onClick={() => {
-                    console.log('Day clicked:', day, 'formatted:', formatDate(day));
-                    setSelectedDayInMonth(day);
-                  }}
+                  onClick={() => setSelectedDayInMonth(day)}
                 >
                   <div className="flex justify-between items-start">
                     <span className={`text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-gray-700'}`}>{day.getDate()}</span>
@@ -1171,10 +1176,7 @@ export default function Agenda({
         {view === 'MES' && renderMonthView()}
       </div>
 
-      {/* MONTH VIEW OVERLAY (Portal) */}
-      {view === 'MES' && selectedDayInMonth && (() => {
-        console.log('Rendering month overlay for:', selectedDayInMonth, formatDate(selectedDayInMonth));
-        return createPortal(
+      {view === 'MES' && selectedDayInMonth && createPortal(
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setSelectedDayInMonth(null)}>
           <div className="bg-white rounded-lg shadow-xl w-[90%] max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center p-4 border-b bg-gray-50">
@@ -1203,8 +1205,7 @@ export default function Agenda({
           </div>
         </div>,
         document.body
-      );
-      })()}
+      )}
 
       {/* NEW APPOINTMENT MODAL */}
       {showModal && (
