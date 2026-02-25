@@ -261,7 +261,7 @@ export default function Agenda({
 
       const servicosFiltrados = data.filter((item: any) => {
         // ajuste esse filtro de acordo com seu modelo
-        return item.categoria === 'SERVICO';
+        return item.tipo === 'Serviço';
       });
 
       setServicos(servicosFiltrados);
