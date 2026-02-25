@@ -121,8 +121,8 @@ const AgendaDayView: React.FC<AgendaDayViewProps> = ({
       {slots.map(time => {
         const appsInSlot = dayAgendamentos.filter(a => {
           const d = new Date(a.dataInicio);
-          const h = d.getUTCHours();
-          const m = d.getUTCMinutes();
+          const h = d.getHours();
+          const m = d.getMinutes();
           const timeStr = `${h < 10 ? '0' + h : h}:${m < 10 ? '0' + m : m}`;
           return timeStr === time;
         });
@@ -1147,8 +1147,8 @@ export default function Agenda({
                         {slots.map(time => {
                             const appsInSlot = dayAgendamentos.filter(a => {
                                 const d = new Date(a.dataInicio);
-                                const h = d.getUTCHours();
-                                const m = d.getUTCMinutes();
+                                const h = d.getHours();
+                                const m = d.getMinutes();
                                 const timeStr = `${h < 10 ? '0' + h : h}:${m < 10 ? '0' + m : m}`;
                                 return timeStr === time;
                             });
