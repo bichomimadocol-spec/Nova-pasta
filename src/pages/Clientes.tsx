@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Cliente, Pet } from '../App';
+import { syncClientesToDB } from '../lib/dbSync';
 
 interface ClientesProps {
   clientes: Cliente[];
@@ -220,22 +221,7 @@ export default function Clientes({ clientes, setClientes, pets, setPets }: Clien
     } else {
       // Create new client
       try {
-        const response = await fetch('/api/sync/clientes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...formData,
-            dataCadastro: new Date().toLocaleDateString(),
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          alert(`Erro ao salvar cliente: ${errorData.error || response.statusText}`);
-          return;
-        }
-
-        const newCliente = await response.json();
+        const newCliente = await syncClientesToDB(formData);
         setClientes((prev) => [newCliente, ...prev]); // Add to top of list
         handleCancel();
       } catch (error) {
