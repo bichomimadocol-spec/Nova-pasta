@@ -25,6 +25,7 @@ export default async function handler(req: any, res: any) {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS produtos (
         id SERIAL PRIMARY KEY,
+        tipo VARCHAR(20) DEFAULT 'Produto',
         nome TEXT NOT NULL,
         categoria TEXT,
         preco DECIMAL(10,2) NOT NULL,
@@ -36,6 +37,7 @@ export default async function handler(req: any, res: any) {
       const result = await pool.query('SELECT * FROM produtos ORDER BY id DESC');
       const produtos = result.rows.map((row: any) => ({
         id: row.id,
+        tipo: row.tipo,
         nome: row.nome,
         categoria: row.categoria,
         preco: parseFloat(row.preco),
@@ -46,18 +48,19 @@ export default async function handler(req: any, res: any) {
 
     if (req.method === 'POST') {
       console.log('BODY_PRODUTO', req.body);
-      const { nome, categoria, preco, estoque } = req.body;
+      const { tipo, nome, categoria, preco, estoque } = req.body;
 
       if (!nome || preco === undefined) return res.status(400).json({ error: 'Nome e preço são obrigatórios' });
 
       const result = await pool.query(
-        'INSERT INTO produtos (nome, categoria, preco, estoque) VALUES ($1, $2, $3, $4) RETURNING *',
-        [nome, categoria || null, preco, estoque || 0]
+        'INSERT INTO produtos (tipo, nome, categoria, preco, estoque) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [tipo || 'Produto', nome, categoria || null, preco, estoque || 0]
       );
 
       const row = result.rows[0];
       const novoProduto = {
         id: row.id,
+        tipo: row.tipo,
         nome: row.nome,
         categoria: row.categoria,
         preco: parseFloat(row.preco),

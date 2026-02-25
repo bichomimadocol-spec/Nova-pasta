@@ -20,13 +20,13 @@ export default function Produtos({ produtos, setProdutos }: ProdutosProps) {
           const data = await response.json();
           setProdutos(data.map((p: any) => ({
             ...p,
-            tipo: 'Produto',
-            descricao: '',
-            ativo: true,
-            controlaEstoque: true,
-            estoqueAtual: p.estoque,
-            estoqueMinimo: 0,
-            dataCadastro: new Date().toLocaleDateString(),
+            tipo: p.tipo || 'Produto', // respeitar o tipo do banco
+            descricao: p.descricao || '',
+            ativo: p.ativo !== false,
+            controlaEstoque: p.controla_estoque !== false,
+            estoqueAtual: p.estoque_atual || p.estoque || 0,
+            estoqueMinimo: p.estoque_minimo || 0,
+            dataCadastro: p.data_cadastro || new Date().toLocaleDateString(),
           })));
         }
       } catch (error) {
@@ -44,6 +44,7 @@ export default function Produtos({ produtos, setProdutos }: ProdutosProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          tipo: data.tipo,
           nome: data.nome,
           categoria: data.categoria || '',
           preco: Number(data.preco),
@@ -56,13 +57,13 @@ export default function Produtos({ produtos, setProdutos }: ProdutosProps) {
         const novoProduto = dataResponse;
         setProdutos(prev => [...prev, {
           ...novoProduto,
-          tipo: 'Produto',
-          descricao: '',
-          ativo: true,
-          controlaEstoque: true,
-          estoqueAtual: novoProduto.estoque,
-          estoqueMinimo: 0,
-          dataCadastro: new Date().toLocaleDateString(),
+          tipo: data.tipo, // usar o tipo do form
+          descricao: novoProduto.descricao || '',
+          ativo: novoProduto.ativo !== false,
+          controlaEstoque: novoProduto.controla_estoque !== false,
+          estoqueAtual: novoProduto.estoque_atual || novoProduto.estoque || 0,
+          estoqueMinimo: novoProduto.estoque_minimo || 0,
+          dataCadastro: novoProduto.data_cadastro || new Date().toLocaleDateString(),
         }]);
         setIsFormVisible(false);
       } else {
