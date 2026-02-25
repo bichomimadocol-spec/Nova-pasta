@@ -255,19 +255,18 @@ export default function Agenda({
   // Carregar serviços
   useEffect(() => {
     const loadServicos = async () => {
-      try {
-        const response = await fetch('/api/produtos');
-        if (response.ok) {
-          const data = await response.json();
-          const servicosFiltrados = data.filter((item: any) => item.tipo === 'Serviço');
-          setServicos(servicosFiltrados);
-        } else {
-          console.error('Erro ao carregar serviços:', response.statusText);
-        }
-      } catch (error) {
-        console.error('Erro de conexão ao carregar serviços:', error);
-      }
+      const response = await fetch('/api/produtos'); // rota correta de produtos/serviços
+      const data = await response.json();
+      console.log('SERVICOS_API', data);
+
+      const servicosFiltrados = data.filter((item: any) => {
+        // ajuste esse filtro de acordo com seu modelo
+        return item.categoria === 'SERVICO';
+      });
+
+      setServicos(servicosFiltrados);
     };
+
     loadServicos();
   }, []);
 
@@ -1311,6 +1310,7 @@ export default function Agenda({
                                             ...formData, 
                                             servicoId: servico.id, 
                                             servico: servico.nome, 
+                                            servicoNome: servico.nome,
                                             valor: servico.preco
                                         });
                                     } else {
@@ -1318,6 +1318,7 @@ export default function Agenda({
                                             ...formData, 
                                             servicoId: undefined, 
                                             servico: '', 
+                                            servicoNome: '',
                                             valor: 0
                                         });
                                     }
@@ -1335,7 +1336,7 @@ export default function Agenda({
                                 <input 
                                     type="text" 
                                     value={formData.servico} 
-                                    onChange={(e) => setFormData({...formData, servico: e.target.value, servicoId: undefined})}
+                                    onChange={(e) => setFormData({...formData, servico: e.target.value, servicoNome: e.target.value, servicoId: undefined})}
                                     className="w-full border rounded p-2"
                                     placeholder="Nome do serviço"
                                     required
