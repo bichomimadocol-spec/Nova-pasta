@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Produto } from '../App';
 import ProdutoList from '../components/produtos/ProdutoList';
 import ProdutoForm from '../components/produtos/ProdutoForm';
@@ -12,17 +12,65 @@ export default function Produtos({ produtos, setProdutos }: ProdutosProps) {
   const [editingProduto, setEditingProduto] = useState<Produto | null>(null);
   const [isFormVisible, setIsFormVisible] = useState(false);
 
-  const handleCreate = (data: any) => {
-    const newProduto: Produto = {
-      id: Date.now(),
-      ...data,
-      preco: Number(data.preco),
-      estoqueAtual: Number(data.estoqueAtual || 0),
-      estoqueMinimo: Number(data.estoqueMinimo || 0),
-      dataCadastro: new Date().toLocaleDateString(),
+  useEffect(() => {
+    const loadProdutos = async () => {
+      try {
+        const response = await fetch('/api/produtos');
+        if (response.ok) {
+          const data = await response.json();
+          setProdutos(data.map((p: any) => ({
+            ...p,
+            tipo: 'Produto',
+            descricao: '',
+            ativo: true,
+            controlaEstoque: true,
+            estoqueAtual: p.estoque,
+            estoqueMinimo: 0,
+            dataCadastro: new Date().toLocaleDateString(),
+          })));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar produtos:', error);
+      }
     };
-    setProdutos(prev => [...prev, newProduto]);
-    setIsFormVisible(false);
+    loadProdutos();
+  }, [setProdutos]);
+
+  const handleCreate = async (data: any) => {
+    try {
+      const response = await fetch('/api/produtos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nome: data.nome,
+          categoria: data.categoria || '',
+          preco: Number(data.preco),
+          estoque: Number(data.estoqueAtual || 0)
+        }),
+      });
+      const dataResponse = await response.json();
+      console.log('RESPOSTA_API_PRODUTOS', response.status, dataResponse);
+      if (response.ok) {
+        const novoProduto = dataResponse;
+        setProdutos(prev => [...prev, {
+          ...novoProduto,
+          tipo: 'Produto',
+          descricao: '',
+          ativo: true,
+          controlaEstoque: true,
+          estoqueAtual: novoProduto.estoque,
+          estoqueMinimo: 0,
+          dataCadastro: new Date().toLocaleDateString(),
+        }]);
+        setIsFormVisible(false);
+      } else {
+        console.error('Erro ao criar produto');
+      }
+    } catch (error) {
+      console.error('Erro ao criar produto:', error);
+    }
   };
 
   const handleUpdate = (data: any) => {

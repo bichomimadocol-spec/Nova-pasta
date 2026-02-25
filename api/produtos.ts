@@ -45,6 +45,7 @@ export default async function handler(req: any, res: any) {
     }
 
     if (req.method === 'POST') {
+      console.log('BODY_PRODUTO', req.body);
       const { nome, categoria, preco, estoque } = req.body;
 
       if (!nome || preco === undefined) return res.status(400).json({ error: 'Nome e preço são obrigatórios' });
