@@ -60,12 +60,14 @@ const AgendaDayView: React.FC<AgendaDayViewProps> = ({
   const formatDate = (d: Date) => d.toISOString().split('T')[0];
 
   const dayAgendamentos = useMemo(() => {
-    return filteredAgendamentos.filter(a => {
+    const result = filteredAgendamentos.filter(a => {
       const d = new Date(a.dataInicio);
       return d.getFullYear() === date.getFullYear() &&
              d.getMonth() === date.getMonth() &&
              d.getDate() === date.getDate();
     });
+    console.log(`dayAgendamentos for ${date.toDateString()}: ${result.length} agendamentos`);
+    return result;
   }, [filteredAgendamentos, date]);
 
   const slots = [];
@@ -895,10 +897,12 @@ export default function Agenda({
   // --- DATA PREPARATION ---
 
   const filteredAgendamentos = useMemo(() => {
-    return agendamentos.filter(a => {
+    const result = agendamentos.filter(a => {
       if (filterStatus !== 'TODAS' && a.status !== filterStatus) return false;
       return true;
     });
+    console.log(`filteredAgendamentos: ${result.length} (from ${agendamentos.length}), filterStatus: ${filterStatus}`);
+    return result;
   }, [agendamentos, filterStatus]);
 
   const getAgendamentosForDay = (date: Date) => {
@@ -908,6 +912,7 @@ export default function Agenda({
              d.getMonth() === date.getMonth() &&
              d.getDate() === date.getDate();
     });
+    console.log(`getAgendamentosForDay for ${date.toDateString()}: ${result.length} agendamentos`);
     return result;
   };
 
@@ -927,6 +932,7 @@ export default function Agenda({
       const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59);
       return d >= startDate && d <= endDate;
     });
+    console.log(`Indicators for view ${view}, start ${start.toDateString()}, end ${end.toDateString()}: inRange ${inRange.length}, pago ${pago}, pendente ${pendente}, atendimentos ${atendimentos}, planos ${planos}`);
 
     inRange.forEach(a => {
       atendimentos++;
