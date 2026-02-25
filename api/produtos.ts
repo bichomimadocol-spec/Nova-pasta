@@ -47,27 +47,42 @@ export default async function handler(req: any, res: any) {
     }
 
     if (req.method === 'POST') {
-      console.log('BODY_PRODUTO', req.body);
-      const { tipo, nome, categoria, preco, estoque } = req.body;
+      try {
+        console.log('BODY RECEBIDO EM /api/produtos:', req.body);
+        const { tipo, nome, categoria, preco, estoque } = req.body;
 
-      if (!nome || preco === undefined) return res.status(400).json({ error: 'Nome e preço são obrigatórios' });
+        console.log('Campos extraídos:', { tipo, nome, categoria, preco, estoque });
 
-      const result = await pool.query(
-        'INSERT INTO produtos (tipo, nome, categoria, preco, estoque) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [tipo || 'Produto', nome, categoria || null, preco, estoque || 0]
-      );
+        if (!nome || preco === undefined) {
+          console.log('Validação falhou: nome ou preco ausente');
+          return res.status(400).json({ error: 'Nome e preço são obrigatórios' });
+        }
 
-      const row = result.rows[0];
-      const novoProduto = {
-        id: row.id,
-        tipo: row.tipo,
-        nome: row.nome,
-        categoria: row.categoria,
-        preco: parseFloat(row.preco),
-        estoque: parseFloat(row.estoque),
-      };
+        console.log('Executando query INSERT...');
+        const result = await pool.query(
+          'INSERT INTO produtos (tipo, nome, categoria, preco, estoque) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+          [tipo || 'Produto', nome, categoria || null, preco, estoque || 0]
+        );
 
-      return res.status(201).json(novoProduto);
+        console.log('Query executada, resultado:', result.rows[0]);
+
+        const row = result.rows[0];
+        const novoProduto = {
+          id: row.id,
+          tipo: row.tipo,
+          nome: row.nome,
+          categoria: row.categoria,
+          preco: parseFloat(row.preco),
+          estoque: parseFloat(row.estoque),
+        };
+
+        console.log('Retornando produto criado:', novoProduto);
+        return res.status(201).json(novoProduto);
+      } catch (error) {
+        console.error('ERRO EM /api/produtos POST:', error);
+        const message = error instanceof Error ? error.message : 'Erro desconhecido';
+        return res.status(500).json({ error: 'Erro ao salvar produto', details: message });
+      }
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
