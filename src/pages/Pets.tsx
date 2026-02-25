@@ -67,6 +67,24 @@ export default function Pets({ pets, setPets, clientes }: PetsProps) {
     }
   }, [location.state]);
 
+  // Carregar pets da API
+  useEffect(() => {
+    const loadPets = async () => {
+      try {
+        const response = await fetch('/api/pets');
+        if (response.ok) {
+          const data = await response.json();
+          setPets(data);
+        } else {
+          console.error('Erro ao carregar pets:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Erro de conexão ao carregar pets:', error);
+      }
+    };
+    loadPets();
+  }, [setPets]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -91,22 +109,28 @@ export default function Pets({ pets, setPets, clientes }: PetsProps) {
       try {
         const response = await fetch('/api/pets', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({
-            ...formData,
-            clienteId: Number(formData.clienteId),
-            dataCadastro: new Date().toLocaleDateString(),
+            cliente_id: Number(formData.clienteId),
+            nome: formData.nome,
+            especie: formData.especie,
+            raca: formData.raca,
+            data_nascimento: formData.dataNascimento, // enviar em formato 'YYYY-MM-DD'
+            observacoes: formData.observacao,
           }),
         });
 
+        const data = await response.json();
+        console.log('RESPOSTA_API_PETS', response.status, data);
+
         if (!response.ok) {
-          const errorData = await response.json();
-          alert(`Erro ao salvar pet: ${errorData.error || response.statusText}`);
+          alert(`Erro ao salvar pet: ${data.error || response.statusText}`);
           return;
         }
 
-        const newPet = await response.json();
-        setPets((prev) => [newPet, ...prev]);
+        setPets((prev) => [data, ...prev]);
         handleCancel();
       } catch (error) {
         console.error('Erro ao salvar pet:', error);
