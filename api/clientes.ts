@@ -1,6 +1,12 @@
-import { sql } from '@vercel/postgres';
+// api/clientes.ts
+import { createPool } from '@vercel/postgres';
+
+const pool = createPool({
+  connectionString: process.env.NEON_POSTGRES_URL,
+});
 
 export default async function handler(req: any, res: any) {
+  // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -15,7 +21,8 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    await sql`
+    // Criar tabela se não existir
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS clientes (
         id SERIAL PRIMARY KEY,
         nome VARCHAR(255) NOT NULL,
@@ -25,11 +32,11 @@ export default async function handler(req: any, res: any) {
         data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         dados_extra JSONB
       );
-    `;
+    `);
 
     if (req.method === 'GET') {
-      const { rows } = await sql`SELECT * FROM clientes ORDER BY id DESC`;
-      const clientes = rows.map((row: any) => ({
+      const result = await pool.query('SELECT * FROM clientes ORDER BY id DESC');
+      const clientes = result.rows.map((row: any) => ({
         ...row.dados_extra,
         id: row.id,
         nome: row.nome,
@@ -46,11 +53,10 @@ export default async function handler(req: any, res: any) {
       
       if (!nome) return res.status(400).json({ error: 'Nome é obrigatório' });
 
-      const result = await sql`
-        INSERT INTO clientes (nome, email, telefone, cpf, dados_extra)
-        VALUES (${nome}, ${email || ''}, ${telefone || ''}, ${cpf || ''}, ${JSON.stringify(rest)})
-        RETURNING *;
-      `;
+      const result = await pool.query(
+        'INSERT INTO clientes (nome, email, telefone, cpf, dados_extra) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [nome, email || '', telefone || '', cpf || '', JSON.stringify(rest)]
+      );
       
       const row = result.rows[0];
       const novoCliente = {
@@ -62,29 +68,22 @@ export default async function handler(req: any, res: any) {
         cpf: row.cpf,
         dataCadastro: row.data_cadastro,
       };
-      
+
       return res.status(201).json(novoCliente);
     }
 
     if (req.method === 'PUT') {
-      const { id, nome, email, telefone, cpf, ...rest } = req.body;
+      const { id } = req.query;
+      const { nome, email, telefone, cpf, ...rest } = req.body;
       
-      if (!id) return res.status(400).json({ error: 'ID é obrigatório' });
+      if (!id || !nome) return res.status(400).json({ error: 'ID e nome são obrigatórios' });
 
-      const result = await sql`
-        UPDATE clientes 
-        SET nome = ${nome}, 
-            email = ${email || ''}, 
-            telefone = ${telefone || ''}, 
-            cpf = ${cpf || ''}, 
-            dados_extra = ${JSON.stringify(rest)}
-        WHERE id = ${id}
-        RETURNING *;
-      `;
-
-      if (result.rowCount === 0) {
-        return res.status(404).json({ error: 'Cliente não encontrado' });
-      }
+      const result = await pool.query(
+        'UPDATE clientes SET nome = $1, email = $2, telefone = $3, cpf = $4, dados_extra = $5 WHERE id = $6 RETURNING *',
+        [nome, email || '', telefone || '', cpf || '', JSON.stringify(rest), id]
+      );
+      
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Cliente não encontrado' });
 
       const row = result.rows[0];
       const clienteAtualizado = {
@@ -105,9 +104,11 @@ export default async function handler(req: any, res: any) {
       
       if (!id) return res.status(400).json({ error: 'ID é obrigatório' });
 
-      await sql`DELETE FROM clientes WHERE id = ${id}`;
+      const result = await pool.query('DELETE FROM clientes WHERE id = $1 RETURNING *', [id]);
       
-      return res.status(200).json({ message: 'Cliente removido com sucesso' });
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Cliente não encontrado' });
+
+      return res.status(200).json({ message: 'Cliente deletado com sucesso' });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
