@@ -71,13 +71,36 @@ export default function Pets({ pets, setPets, clientes }: PetsProps) {
   useEffect(() => {
     const loadPets = async () => {
       try {
-        const response = await fetch('/api/pets');
-        if (response.ok) {
-          const data = await response.json();
-          setPets(data);
-        } else {
+        const response = await fetch('/api/pets', { cache: 'no-store' });
+        if (!response.ok) {
           console.error('Erro ao carregar pets:', response.statusText);
+          return;
         }
+
+        const data = await response.json();
+        console.log('PETS_API', data);
+
+        const petsNormalizados: Pet[] = data.map((row: any) => ({
+          id: row.id,
+          nome: row.nome,
+          clienteId: row.cliente_id,
+          especie: row.especie || '',
+          raca: row.raca || '',
+          genero: '',            // ou mantenha do tipo se existir
+          porte: '',
+          pelagem: '',
+          dataNascimento: row.data_nascimento || '',
+          idade: '',
+          chip: '',
+          pedigreeRg: '',
+          alimentacao: '',
+          tags: '',
+          alergias: '',
+          observacao: row.observacoes || '',
+          dataCadastro: new Date().toISOString(),
+        }));
+
+        setPets(petsNormalizados);
       } catch (error) {
         console.error('Erro de conexão ao carregar pets:', error);
       }
