@@ -83,7 +83,7 @@ export default function Pets({ pets, setPets, clientes }: PetsProps) {
       }
     };
     loadPets();
-  }, [setPets]);
+  }, [setPets, location.pathname]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
