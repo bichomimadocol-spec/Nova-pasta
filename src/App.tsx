@@ -518,6 +518,8 @@ export interface PaymentAccount {
 
 import { FinanceiroService } from './services/financeiro';
 import { clientesService } from './services/clientesService';
+import { produtosService } from './services/produtosService';
+import { petsService } from './services/petsService';
 import { agendamentosService } from './services/agendamentosService';
 import { vendasService } from './services/vendasService';
 
@@ -531,10 +533,12 @@ export default function App() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [clientesData, vendasData, agendamentosData] = await Promise.all([
+        const [clientesData, vendasData, agendamentosData, produtosData, petsData] = await Promise.all([
           clientesService.listar(),
           vendasService.listar(),
-          agendamentosService.listar()
+          agendamentosService.listar(),
+          produtosService.listar(),
+          petsService.listar()
         ]);
         
         if (clientesData && clientesData.length > 0) {
@@ -547,6 +551,14 @@ export default function App() {
 
         if (agendamentosData && agendamentosData.length > 0) {
           setAgendamentos(agendamentosData);
+        }
+
+        if (produtosData && produtosData.length > 0) {
+          setProdutos(produtosData);
+        }
+
+        if (petsData && petsData.length > 0) {
+          setPets(petsData);
         }
       } catch (error) {
         console.error('Erro ao carregar dados do banco:', error);
