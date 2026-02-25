@@ -47,7 +47,12 @@ export default async function handler(req: any, res: any) {
     `);
 
     if (req.method === 'GET') {
-      const result = await pool.query('SELECT * FROM agendamentos ORDER BY data_inicio DESC');
+      let query = 'SELECT * FROM agendamentos';
+      if (req.query.today === 'true') {
+        query += ' WHERE DATE(data_inicio) = CURRENT_DATE';
+      }
+      query += ' ORDER BY data_inicio DESC';
+      const result = await pool.query(query);
       const agendamentos = result.rows.map((row: any) => ({
         id: row.id,
         clienteId: row.cliente_id,
@@ -138,6 +143,12 @@ export default async function handler(req: any, res: any) {
       };
 
       return res.status(201).json(agendamento);
+    }
+
+    if (req.method === 'DELETE' && req.query.today === 'true') {
+      const result = await pool.query('DELETE FROM agendamentos WHERE DATE(data_inicio) = CURRENT_DATE');
+      console.log(`Deleted ${result.rowCount} agendamentos from today`);
+      return res.status(200).json({ message: `Deleted ${result.rowCount} agendamentos from today` });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
