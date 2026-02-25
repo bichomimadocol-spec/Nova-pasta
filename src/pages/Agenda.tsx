@@ -247,6 +247,48 @@ export default function Agenda({
     };
     loadAgendamentos();
   }, []);
+
+  // Estados para serviços e planos
+  const [servicos, setServicos] = useState<any[]>([]);
+  const [planos, setPlanos] = useState<any[]>([]);
+
+  // Carregar serviços
+  useEffect(() => {
+    const loadServicos = async () => {
+      try {
+        const response = await fetch('/api/produtos');
+        if (response.ok) {
+          const data = await response.json();
+          const servicosFiltrados = data.filter((item: any) => item.tipo === 'Serviço');
+          setServicos(servicosFiltrados);
+        } else {
+          console.error('Erro ao carregar serviços:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Erro de conexão ao carregar serviços:', error);
+      }
+    };
+    loadServicos();
+  }, []);
+
+  // Carregar planos
+  useEffect(() => {
+    const loadPlanos = async () => {
+      try {
+        const response = await fetch('/api/produtos');
+        if (response.ok) {
+          const data = await response.json();
+          const planosFiltrados = data.filter((item: any) => item.tipo === 'Plano');
+          setPlanos(planosFiltrados);
+        } else {
+          console.error('Erro ao carregar planos:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Erro de conexão ao carregar planos:', error);
+      }
+    };
+    loadPlanos();
+  }, []);
   const [showActionMenu, setShowActionMenu] = useState(false);
 
   // Modal/Panel State
@@ -327,10 +369,6 @@ export default function Agenda({
       addItemRef.current.scrollTop = 0;
     }
   }, [showAddItemModal]);
-
-  const servicosCadastrados = useMemo(() => {
-    return produtos.filter(p => p.tipo === 'Serviço' && p.ativo);
-  }, [produtos]);
 
   // --- HELPERS ---
 
@@ -566,12 +604,22 @@ export default function Agenda({
       return;
     }
 
+    if (formData.origemServico === 'PLANO' && !formData.planoId) {
+      alert('Selecione um plano quando a origem for PLANO');
+      return;
+    }
+
     const finalData = {
         ...formData,
         planoConsumoPendente: formData.origemServico === 'PLANO' ? true : false,
         // If PLANO, ensure value is 0 or handled by plan logic (usually 0 for consumption)
         // But we keep user input or default
     };
+
+    // Filter out undefined values to avoid sending null/undefined to API
+    const cleanData = Object.fromEntries(
+        Object.entries(finalData).filter(([_, value]) => value !== undefined && value !== null)
+    );
 
     if (editingId) {
       // Update existing agendamento
@@ -585,7 +633,7 @@ export default function Agenda({
           const response = await fetch('/api/agendamentos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(finalData),
+            body: JSON.stringify(cleanData),
           });
 
           if (!response.ok) {
@@ -1232,7 +1280,7 @@ export default function Agenda({
                     <div>
                         <div className="flex justify-between items-center mb-1">
                             <label className="block text-sm font-medium text-gray-700">Serviço</label>
-                            {servicosCadastrados.length > 0 && (
+                            {servicos.length > 0 && (
                                 <button 
                                     type="button" 
                                     onClick={() => {
@@ -1252,12 +1300,12 @@ export default function Agenda({
                             )}
                         </div>
 
-                        {servicosCadastrados.length > 0 && !usarServicoManual ? (
+                        {servicos.length > 0 && !usarServicoManual ? (
                             <select 
                                 value={formData.servicoId || ''} 
                                 onChange={(e) => {
                                     const selectedId = Number(e.target.value);
-                                    const servico = servicosCadastrados.find(s => s.id === selectedId);
+                                    const servico = servicos.find(s => s.id === selectedId);
                                     if (servico) {
                                         setFormData({
                                             ...formData, 
@@ -1278,7 +1326,7 @@ export default function Agenda({
                                 required={!usarServicoManual}
                             >
                                 <option value="">Selecione um serviço...</option>
-                                {servicosCadastrados.map(s => (
+                                {servicos.map(s => (
                                     <option key={s.id} value={s.id}>{s.nome} - R$ {s.preco.toFixed(2)}</option>
                                 ))}
                             </select>
@@ -1292,7 +1340,7 @@ export default function Agenda({
                                     placeholder="Nome do serviço"
                                     required
                                 />
-                                {servicosCadastrados.length === 0 && (
+                                {servicos.length === 0 && (
                                     <div className="text-xs text-yellow-600 mt-1">
                                         Nenhum serviço cadastrado. <span className="italic">Cadastre em Produtos/Serviços para facilitar.</span>
                                     </div>
@@ -1306,9 +1354,9 @@ export default function Agenda({
                             <div className="text-sm text-yellow-600 bg-yellow-50 p-2 rounded">
                                 Selecione o cliente primeiro para ver os planos.
                             </div>
-                        ) : eligiblePlans.length === 0 ? (
+                                        ) : planos.length === 0 ? (
                             <div className="text-sm text-gray-500 bg-gray-100 p-2 rounded">
-                                Planos ainda não configurados ou nenhum plano ativo para este cliente.
+                                Planos ainda não configurados.
                             </div>
                         ) : (
                             <>
@@ -1321,14 +1369,11 @@ export default function Agenda({
                                         required
                                     >
                                         <option value="">Selecione o plano...</option>
-                                        {eligiblePlans.map(c => {
-                                            const prod = produtos.find(p => p.id === c.planoId);
-                                            return (
-                                                <option key={c.id} value={c.id}>
-                                                    {prod?.nome || 'Plano Desconhecido'} (#{c.numero})
-                                                </option>
-                                            );
-                                        })}
+                                        {planos.map(p => (
+                                            <option key={p.id} value={p.id}>
+                                                {p.nome}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                                 {formData.planoId && (
@@ -1337,7 +1382,15 @@ export default function Agenda({
                                         {planServices.length > 0 ? (
                                             <select 
                                                 value={formData.servico}
-                                                onChange={(e) => setFormData({...formData, servico: e.target.value})}
+                                                onChange={(e) => {
+                                                    const selectedService = e.target.value;
+                                                    const servicoEncontrado = servicos.find(s => s.nome === selectedService);
+                                                    setFormData({
+                                                        ...formData, 
+                                                        servico: selectedService,
+                                                        servicoId: servicoEncontrado ? servicoEncontrado.id : undefined
+                                                    });
+                                                }}
                                                 className="w-full border rounded p-2"
                                                 required
                                             >
@@ -1547,7 +1600,7 @@ export default function Agenda({
                                     <select 
                                         value={formData.servicoId || ''}
                                         onChange={(e) => {
-                                            const s = servicosCadastrados.find(s => s.id === Number(e.target.value));
+                                            const s = servicos.find(s => s.id === Number(e.target.value));
                                             if (s) {
                                                 setFormData({
                                                     ...formData, 
@@ -1560,7 +1613,7 @@ export default function Agenda({
                                         className="w-full border rounded-lg p-2.5 bg-white"
                                     >
                                         <option value="">Selecione...</option>
-                                        {servicosCadastrados.map(s => (
+                                        {servicos.map(s => (
                                             <option key={s.id} value={s.id}>{s.nome} - R$ {s.preco.toFixed(2)}</option>
                                         ))}
                                     </select>
