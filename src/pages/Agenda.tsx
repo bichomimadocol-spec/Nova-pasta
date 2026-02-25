@@ -658,22 +658,27 @@ export default function Agenda({
             body: JSON.stringify(cleanData),
           });
 
-          console.log('STATUS_AGENDAMENTO:', response.status);
-          const result = await response.json().catch(() => null);
-          console.log('RESPOSTA_AGENDAMENTO:', result);
+          console.log('STATUS_AGENDAMENTO:', response.status, 'OK:', response.ok);
+          const raw = await response.text();
+          console.log('BODY_AGENDAMENTO_RAW:', raw);
+          let result;
+          try {
+            result = raw ? JSON.parse(raw) : null;
+          } catch (e) {
+            result = null;
+          }
+          console.log('RESPOSTA_AGENDAMENTO_PARSED:', result);
 
           if (!response.ok) {
-            const errorData = await response.json();
-            alert(`Erro ao salvar agendamento: ${errorData.error || response.statusText}`);
+            alert(`Erro ao salvar agendamento: ${result?.error || result?.details || response.statusText}`);
             return;
           }
 
-          const newAgendamento = await response.json();
-          setAgendamentos(prev => [...prev, newAgendamento]);
+          setAgendamentos(prev => [...prev, result]);
           setShowModal(false);
         } catch (error) {
           console.error('Erro ao salvar agendamento:', error);
-          alert('Erro de conexão ao salvar agendamento.');
+          alert(`Erro de conexão ao salvar agendamento: ${error.message}`);
         }
       })();
     }
