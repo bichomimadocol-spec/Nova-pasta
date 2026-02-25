@@ -124,7 +124,9 @@ const AgendaDayView: React.FC<AgendaDayViewProps> = ({
           const h = d.getHours();
           const m = d.getMinutes();
           const timeStr = `${h < 10 ? '0' + h : h}:${m < 10 ? '0' + m : m}`;
-          return timeStr === time;
+          console.log(`Agendamento ${a.id} timeStr: ${timeStr}, slot: ${time}`);
+          const match = timeStr === time;
+          return match;
         });
 
         // Empty slot
