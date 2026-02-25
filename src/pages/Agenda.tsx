@@ -60,12 +60,10 @@ const AgendaDayView: React.FC<AgendaDayViewProps> = ({
   const formatDate = (d: Date) => d.toISOString().split('T')[0];
 
   const dayAgendamentos = useMemo(() => {
-    const result = filteredAgendamentos.filter(a => {
+    return filteredAgendamentos.filter(a => {
       const d = new Date(a.dataInicio);
       return d.toDateString() === date.toDateString();
     });
-    console.log(`dayAgendamentos for ${date.toDateString()}: ${result.length} agendamentos`);
-    return result;
   }, [filteredAgendamentos, date]);
 
   const slots = [];
@@ -98,8 +96,6 @@ const AgendaDayView: React.FC<AgendaDayViewProps> = ({
             </div>
         </div>
       )}
-
-      {console.log('DIA - dayAgendamentos:', dayAgendamentos.length, dayAgendamentos)}
 
       {/* Header Row */}
       <div className="flex bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase py-3">
@@ -898,12 +894,10 @@ export default function Agenda({
   // --- DATA PREPARATION ---
 
   const filteredAgendamentos = useMemo(() => {
-    const result = agendamentos.filter(a => {
+    return agendamentos.filter(a => {
       if (filterStatus !== 'TODAS' && a.status !== filterStatus) return false;
       return true;
     });
-    console.log(`filteredAgendamentos: ${result.length} (from ${agendamentos.length}), filterStatus: ${filterStatus}`);
-    return result;
   }, [agendamentos, filterStatus]);
 
   const getAgendamentosForDay = (date: Date) => {
@@ -911,7 +905,6 @@ export default function Agenda({
       const d = new Date(a.dataInicio);
       return d.toDateString() === date.toDateString();
     });
-    console.log(`getAgendamentosForDay for ${date.toDateString()}: ${result.length} agendamentos`);
     return result;
   };
 
@@ -981,7 +974,10 @@ export default function Agenda({
                   className={`h-24 border rounded-md p-2 cursor-pointer transition-all hover:shadow-md flex flex-col justify-between ${
                     isSelected ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'bg-white'
                   } ${isToday ? 'border-indigo-300' : 'border-gray-200'}`}
-                  onClick={() => setSelectedDayInMonth(day)}
+                  onClick={() => {
+                    setSelectedDayInMonth(day);
+                    setCurrentDate(day);
+                  }}
                 >
                   <div className="flex justify-between items-start">
                     <span className={`text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-gray-700'}`}>{day.getDate()}</span>
@@ -1122,7 +1118,6 @@ export default function Agenda({
                 const day = addDays(getStartOfWeek(currentDate), i);
                 semanaAgendamentos.push(...getAgendamentosForDay(day));
             }
-            console.log('SEMANA - semanaAgendamentos:', semanaAgendamentos.length, semanaAgendamentos);
             return (
             // Reusing logic for week view but simpler rendering
             <div className="flex overflow-x-auto border rounded-lg bg-white shadow-sm">
