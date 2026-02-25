@@ -4,10 +4,7 @@ import express from 'express';
 import { createServer as createViteServer } from 'vite';
 
 // 🔴 REMOVIDOS: imports de handlers que não existem na Vercel
-// import clientesHandler from './api/sync/clientes';
-// import vendasHandler from './api/sync/vendas';
-// import petsHandler from './api/sync/pets';
-// import agendamentosHandler from './api/sync/agendamentos';
+// import clientesHandler from './api/clientes';
 
 async function startServer() {
   const app = express();
