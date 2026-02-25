@@ -227,6 +227,11 @@ export default function Agenda({
   const [filterStatus, setFilterStatus] = useState<string>('TODAS');
   const [selectedDayInMonth, setSelectedDayInMonth] = useState<Date | null>(null);
   
+  // Sync local state with props
+  useEffect(() => {
+    setAgendamentos(propAgendamentos);
+  }, [propAgendamentos]);
+
   // Selection State
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
@@ -675,6 +680,7 @@ export default function Agenda({
           }
 
           setAgendamentos(prev => [...prev, result]);
+          propSetAgendamentos(prev => [...prev, result]); // Update global state
           setShowModal(false);
         } catch (error) {
           console.error('Erro ao salvar agendamento:', error);
