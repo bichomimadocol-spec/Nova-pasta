@@ -36,6 +36,7 @@ export default async function handler(req: any, res: any) {
       const result = await pool.query('SELECT * FROM produtos ORDER BY id DESC');
       const produtos = result.rows.map((row: any) => ({
         id: row.id,
+        tipo: row.categoria || 'Produto', // mapear categoria para tipo
         nome: row.nome,
         categoria: row.categoria,
         preco: parseFloat(row.preco),
@@ -51,8 +52,9 @@ export default async function handler(req: any, res: any) {
 
         console.log('Campos extraídos:', { tipo, nome, categoria, preco, estoque });
 
+        const tipoSelecionado = tipo ?? 'Produto';
         const nomeValido = nome ?? null;
-        const categoriaValida = categoria ?? null;
+        const categoriaValida = tipoSelecionado; // usar categoria para armazenar o tipo
         const precoValido = preco ? Number(preco) : null;
         const estoqueValido = estoque ? Number(estoque) : 0;
 

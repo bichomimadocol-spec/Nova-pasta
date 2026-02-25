@@ -20,7 +20,7 @@ export default function Produtos({ produtos, setProdutos }: ProdutosProps) {
           const data = await response.json();
           setProdutos(data.map((p: any) => ({
             ...p,
-            tipo: p.tipo || 'Produto', // respeitar o tipo do banco
+            tipo: p.tipo, // usar o tipo retornado pela API
             descricao: p.descricao || '',
             ativo: p.ativo !== false,
             controlaEstoque: p.controla_estoque !== false,
@@ -57,7 +57,7 @@ export default function Produtos({ produtos, setProdutos }: ProdutosProps) {
         const novoProduto = dataResponse;
         setProdutos(prev => [...prev, {
           ...novoProduto,
-          tipo: data.tipo, // usar o tipo do form
+          tipo: novoProduto.tipo, // usar o tipo retornado pela API
           descricao: novoProduto.descricao || '',
           ativo: novoProduto.ativo !== false,
           controlaEstoque: novoProduto.controla_estoque !== false,
