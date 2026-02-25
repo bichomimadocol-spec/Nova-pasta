@@ -73,6 +73,7 @@ export default async function handler(req: any, res: any) {
     }
 
     if (req.method === 'POST') {
+      console.log('BODY_AGENDAMENTO:', req.body);
       const {
         clienteId,
         petId,

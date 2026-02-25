@@ -599,7 +599,29 @@ export default function Agenda({
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.clienteId || formData.clienteId === 0) {
+      alert('Selecione um cliente válido.');
+      return;
+    }
+
+    if (!formData.petId || formData.petId === 0) {
+      // Pet é opcional, mas se origem PLANO, talvez obrigatório? Por enquanto, permitir null
+      // alert('Selecione um pet válido.');
+      // return;
+    }
+
+    if (!formData.servico) {
+      alert('Digite o serviço.');
+      return;
+    }
+
+    if (!formData.dataInicio || !formData.dataFim) {
+      alert('Selecione uma data e hora.');
+      return;
+    }
+    
     if (new Date(formData.dataInicio!) > new Date(formData.dataFim!)) {
+      alert('Data de início não pode ser maior que data de fim.');
       return;
     }
 
@@ -617,7 +639,7 @@ export default function Agenda({
 
     // Filter out undefined values to avoid sending null/undefined to API
     const cleanData = Object.fromEntries(
-        Object.entries(finalData).filter(([_, value]) => value !== undefined && value !== null)
+        Object.entries(finalData).filter(([_, value]) => value !== undefined && value !== null && value !== 0)
     );
 
     if (editingId) {
@@ -629,11 +651,16 @@ export default function Agenda({
       // Create new agendamento
       (async () => {
         try {
+          console.log('ENVIANDO AGENDAMENTO:', cleanData);
           const response = await fetch('/api/agendamentos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(cleanData),
           });
+
+          console.log('STATUS_AGENDAMENTO:', response.status);
+          const result = await response.json().catch(() => null);
+          console.log('RESPOSTA_AGENDAMENTO:', result);
 
           if (!response.ok) {
             const errorData = await response.json();
