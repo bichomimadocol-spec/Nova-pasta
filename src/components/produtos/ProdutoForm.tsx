@@ -149,6 +149,13 @@ export default function ProdutoForm({ initialData, onSubmit, onCancel }: Produto
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted with data:', formData);
+
+    if (!formData.nome || !formData.preco) {
+      alert('Nome e preço são obrigatórios');
+      return;
+    }
+
     onSubmit(formData);
   };
 
