@@ -350,7 +350,12 @@ export default function Clientes({ clientes, setClientes, pets, setPets }: Clien
 
   const handleSavePet = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingId) return;
+    if (!editingId) {
+      console.error('ERRO: editingId é null, não pode salvar pet');
+      return;
+    }
+
+    console.log('SALVANDO PET PARA CLIENTE ID:', editingId);
 
     if (editingPetId !== null) {
       // Update existing pet
@@ -388,24 +393,24 @@ export default function Clientes({ clientes, setClientes, pets, setPets }: Clien
           return;
         }
 
-        // Normalizar o retorno da API (snake_case) para o formato da interface Pet (camelCase)
+        // Normalizar o retorno da API (camelCase)
         const novoPet: Pet = {
           id: data.id,
           nome: data.nome,
-          clienteId: data.cliente_id,
+          clienteId: data.clienteId, // API retorna clienteId
           especie: data.especie || '',
           raca: data.raca || '',
           genero: petFormData.genero || '',
           porte: petFormData.porte || '',
           pelagem: petFormData.pelagem || '',
-          dataNascimento: data.data_nascimento || '',
+          dataNascimento: data.dataNascimento || '',
           idade: petFormData.idade || '',
           chip: petFormData.chip || '',
           pedigreeRg: petFormData.pedigreeRg || '',
           alimentacao: petFormData.alimentacao || '',
           tags: petFormData.tags || '',
           alergias: petFormData.alergias || '',
-          observacao: data.observacoes || '',
+          observacao: data.observacao || '',
           dataCadastro: new Date().toISOString(),
         };
 
