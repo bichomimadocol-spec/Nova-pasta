@@ -648,9 +648,10 @@ export default function Agenda({
         // But we keep user input or default
     };
 
-    // Filter out undefined values to avoid sending null/undefined to API
+    // Filter out undefined and null values to avoid sending null/undefined to API
+    // Keep 0 values as they are valid (e.g., valor = 0, desconto = 0)
     const cleanData = Object.fromEntries(
-        Object.entries(finalData).filter(([_, value]) => value !== undefined && value !== null && value !== 0)
+        Object.entries(finalData).filter(([_, value]) => value !== undefined && value !== null)
     );
 
     if (editingId) {
