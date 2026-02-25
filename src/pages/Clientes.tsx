@@ -326,12 +326,13 @@ export default function Clientes({ clientes, setClientes, pets, setPets }: Clien
     setPetFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSavePet = (e: React.FormEvent) => {
+  const handleSavePet = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingId) return;
 
     if (editingPetId !== null) {
       // Update existing pet
+      // TODO: Implement API update
       setPets((prev) =>
         prev.map((pet) =>
           pet.id === editingPetId
@@ -340,21 +341,59 @@ export default function Clientes({ clientes, setClientes, pets, setPets }: Clien
         )
       );
     } else {
-      // Create new pet
-      const newPet: Pet = {
-        id: Date.now(),
-        dataCadastro: new Date().toLocaleDateString(),
-        nome: petFormData.nome || '',
-        especie: petFormData.especie || '',
-        raca: petFormData.raca || '',
-        porte: petFormData.porte || '',
-        pelagem: petFormData.pelagem || '',
-        clienteId: editingId,
-        ...petFormData
-      } as Pet;
-      setPets((prev) => [...prev, newPet]);
+      // Create new pet via API
+      try {
+        const response = await fetch('/api/pets', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            cliente_id: editingId,
+            nome: petFormData.nome,
+            especie: petFormData.especie,
+            raca: petFormData.raca,
+            data_nascimento: petFormData.dataNascimento,
+            observacoes: petFormData.observacao,
+          }),
+        });
+
+        const data = await response.json();
+        console.log('RESPOSTA_API_PETS_CLIENTE', response.status, data);
+
+        if (!response.ok) {
+          alert(`Erro ao salvar pet: ${data.error || response.statusText}`);
+          return;
+        }
+
+        // Normalizar o retorno da API (snake_case) para o formato da interface Pet (camelCase)
+        const novoPet: Pet = {
+          id: data.id,
+          nome: data.nome,
+          clienteId: data.cliente_id,
+          especie: data.especie || '',
+          raca: data.raca || '',
+          genero: petFormData.genero || '',
+          porte: petFormData.porte || '',
+          pelagem: petFormData.pelagem || '',
+          dataNascimento: data.data_nascimento || '',
+          idade: petFormData.idade || '',
+          chip: petFormData.chip || '',
+          pedigreeRg: petFormData.pedigreeRg || '',
+          alimentacao: petFormData.alimentacao || '',
+          tags: petFormData.tags || '',
+          alergias: petFormData.alergias || '',
+          observacao: data.observacoes || '',
+          dataCadastro: new Date().toISOString(),
+        };
+
+        setPets((prev) => [novoPet, ...prev]);
+        setShowPetModal(false);
+      } catch (error) {
+        console.error('Erro ao salvar pet:', error);
+        alert('Erro de conexão ao salvar pet.');
+      }
     }
-    setShowPetModal(false);
   };
 
   const handleAddAuxiliary = (type: 'raca' | 'pelagem' | 'porte') => {
